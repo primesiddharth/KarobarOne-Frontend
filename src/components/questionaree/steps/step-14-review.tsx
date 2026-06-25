@@ -50,6 +50,13 @@ export function Step14Review() {
     if (!items || items.length === 0) return "Not specified"
     return items.map(item => item.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase())).join(", ")
   }
+
+  const formatLabel = (value: string | undefined) => {
+    if (!value) return "Not specified"
+    return value.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase())
+  }
+
+  const daysOrder = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
   
   return (
     <StepWrapper
@@ -65,33 +72,48 @@ export function Step14Review() {
             <p><span className="font-medium text-foreground">Phone:</span> {data.phoneNumber || "Not provided"}</p>
             <p><span className="font-medium text-foreground">Email:</span> {data.email || "Not provided"}</p>
             <p><span className="font-medium text-foreground">Tagline:</span> {data.brandTagline || "Not provided"}</p>
-          </div>
-        </ReviewCard>
-        
-        <ReviewCard title="Website Purpose" step={3}>
-          <p>{formatList(data.websitePurpose)}</p>
-        </ReviewCard>
-        
-        <ReviewCard title="GST & Tax Details" step={4}>
-          <div className="grid gap-2">
+            <p><span className="font-medium text-foreground">Business Nature:</span> {formatLabel(data.businessNature)}</p>
             <p><span className="font-medium text-foreground">GST Number:</span> {data.gstNumber || "Not provided"}</p>
             <p><span className="font-medium text-foreground">PAN Number:</span> {data.panNumber || "Not provided"}</p>
-            <p><span className="font-medium text-foreground">Business Type:</span> {data.businessType?.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase()) || "Not specified"}</p>
+            <p><span className="font-medium text-foreground">Business Type:</span> {formatLabel(data.businessType)}</p>
             <p><span className="font-medium text-foreground">Tax Document:</span> {data.taxDocument?.name || "Not uploaded"}</p>
           </div>
         </ReviewCard>
         
         <ReviewCard title="Operating Hours" step={5}>
           <div className="grid gap-2">
-            <p><span className="font-medium text-foreground">Hours:</span> {data.businessHoursStart} - {data.businessHoursEnd}</p>
             <p><span className="font-medium text-foreground">Days Open:</span> {formatList(data.daysOpen)}</p>
+            {data.daysOpen && data.daysOpen.length > 0 ? (
+              daysOrder
+                .filter((day) => data.daysOpen.includes(day))
+                .map((day) => (
+                  <p key={day}>
+                    <span className="font-medium text-foreground">{formatLabel(day)}:</span>{" "}
+                    {data.dayTimings?.[day]
+                      ? `${data.dayTimings[day].open} - ${data.dayTimings[day].close}`
+                      : "Timing not set"}
+                  </p>
+                ))
+            ) : (
+              <p>No operating days selected</p>
+            )}
           </div>
         </ReviewCard>
         
-        <ReviewCard title="Business Category" step={6}>
+        <ReviewCard title="Products / Services" step={6}>
           <div className="grid gap-2">
-            <p><span className="font-medium text-foreground">Category:</span> {data.businessCategory?.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase()) || "Not specified"}</p>
-            <p><span className="font-medium text-foreground">Sub-category:</span> {data.businessSubCategory?.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase()) || "Not specified"}</p>
+            <p><span className="font-medium text-foreground">Plan Type:</span> {formatLabel(data.planType)}</p>
+            <p><span className="font-medium text-foreground">Total Items:</span> {data.items?.length || 0}</p>
+            {data.items && data.items.length > 0 && (
+              <div className="grid gap-1 mt-1">
+                {data.items.map((item) => (
+                  <p key={item.id}>
+                    <span className="font-medium text-foreground">{item.name || "Untitled"}:</span>{" "}
+                    {item.salePrice ? `₹${item.salePrice}` : "Price not set"}
+                  </p>
+                ))}
+              </div>
+            )}
           </div>
         </ReviewCard>
         
@@ -101,9 +123,29 @@ export function Step14Review() {
         
         <ReviewCard title="About Us" step={12}>
           <div className="grid gap-2">
+            <p><span className="font-medium text-foreground">Promoter Name:</span> {data.promoterName || "Not provided"}</p>
+            <p><span className="font-medium text-foreground">Promoter Designation:</span> {data.promoterDesignation || "Not provided"}</p>
+            <p><span className="font-medium text-foreground">Promoter Bio:</span> {data.promoterBio || "Not provided"}</p>
+            <p><span className="font-medium text-foreground">Promoter Photo:</span> {data.promoterPhoto?.name || "Not uploaded"}</p>
+            <p><span className="font-medium text-foreground">Year Founded:</span> {data.yearFounded || "Not provided"}</p>
+            <p><span className="font-medium text-foreground">Company History:</span> {data.companyHistory || "Not provided"}</p>
+            <p><span className="font-medium text-foreground">Mission & Vision:</span> {data.missionVision || "Not provided"}</p>
+            <p><span className="font-medium text-foreground">Certification (Statutory):</span> {data.certificationStatutory?.name || "Not uploaded"}</p>
             <p><span className="font-medium text-foreground">Problem Solved:</span> {data.problemSolved || "Not provided"}</p>
             <p><span className="font-medium text-foreground">Unique Solution:</span> {data.uniqueSolution || "Not provided"}</p>
             <p><span className="font-medium text-foreground">Trust & Credibility:</span> {data.trustCredibility || "Not provided"}</p>
+          </div>
+        </ReviewCard>
+        
+        <ReviewCard title="Why Choose Us" step={12.5}>
+          <p>{formatList(data.whyChooseUs)}</p>
+        </ReviewCard>
+        
+        <ReviewCard title="Social Media" step={12.7}>
+          <div className="grid gap-2">
+            <p><span className="font-medium text-foreground">Facebook:</span> {data.facebookUrl || "Not provided"}</p>
+            <p><span className="font-medium text-foreground">Instagram:</span> {data.instagramUrl || "Not provided"}</p>
+            <p><span className="font-medium text-foreground">LinkedIn:</span> {data.linkedinUrl || "Not provided"}</p>
           </div>
         </ReviewCard>
         

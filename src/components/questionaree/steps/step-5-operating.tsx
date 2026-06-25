@@ -3,95 +3,125 @@
 import { useQuestionnaire } from "@/context/questionnaire-context"
 import { StepWrapper } from "../step-wrapper"
 import { NavigationButtons } from "../navigation-buttons"
-import { SelectableCard } from "../selectable-card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
 const daysOfWeek = [
-  { id: "monday", title: "Monday", short: "Mon" },
-  { id: "tuesday", title: "Tuesday", short: "Tue" },
-  { id: "wednesday", title: "Wednesday", short: "Wed" },
-  { id: "thursday", title: "Thursday", short: "Thu" },
-  { id: "friday", title: "Friday", short: "Fri" },
-  { id: "saturday", title: "Saturday", short: "Sat" },
-  { id: "sunday", title: "Sunday", short: "Sun" },
+  { id: "monday", title: "Monday" },
+  { id: "tuesday", title: "Tuesday" },
+  { id: "wednesday", title: "Wednesday" },
+  { id: "thursday", title: "Thursday" },
+  { id: "friday", title: "Friday" },
+  { id: "saturday", title: "Saturday" },
+  { id: "sunday", title: "Sunday" },
 ]
 
 export function Step5Operating() {
   const { data, updateData } = useQuestionnaire()
-  
+
   const toggleDay = (id: string) => {
     const current = data.daysOpen || []
-    const updated = current.includes(id)
-      ? current.filter((d) => d !== id)
-      : [...current, id]
-    updateData({ daysOpen: updated })
+    const isOpen = current.includes(id)
+
+    if (isOpen) {
+      const updatedTimings = { ...data.dayTimings }
+      delete updatedTimings[id]
+      updateData({
+        daysOpen: current.filter((d) => d !== id),
+        dayTimings: updatedTimings,
+      })
+    } else {
+      updateData({
+        daysOpen: [...current, id],
+        dayTimings: {
+          ...data.dayTimings,
+          [id]: data.dayTimings[id] || { open: "", close: "" },
+        },
+      })
+    }
   }
-  
+
+  const updateTiming = (id: string, field: "open" | "close", value: string) => {
+    updateData({
+      dayTimings: {
+        ...data.dayTimings,
+        [id]: {
+          ...data.dayTimings[id],
+          [field]: value,
+        },
+      },
+    })
+  }
+
   return (
     <StepWrapper
       title="Business Operating Details"
-      description="Let us know your business hours and days of operation."
+      description="Select the days your business operates and set timings for each."
     >
-      <div className="grid gap-8">
-        <div className="grid gap-4">
-          <h3 className="font-medium text-foreground">Business Hours</h3>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="grid gap-2">
-              <Label htmlFor="businessHoursStart">Opening Time</Label>
-              <Input
-                id="businessHoursStart"
-                type="time"
-                value={data.businessHoursStart}
-                onChange={(e) => updateData({ businessHoursStart: e.target.value })}
-              />
+      <div className="grid gap-4">
+        {daysOfWeek.map((day) => {
+          const isOpen = data.daysOpen?.includes(day.id)
+          const timing = data.dayTimings?.[day.id]
+
+          return (
+            <div
+              key={day.id}
+              className={`rounded-xl border-2 p-4 transition-all duration-200 ${
+                isOpen ? "border-accent bg-accent/5" : "border-border bg-card"
+              }`}
+            >
+              <div className="flex items-center justify-between gap-4">
+                <button
+                  type="button"
+                  onClick={() => toggleDay(day.id)}
+                  className="flex items-center gap-3 flex-1 text-left"
+                >
+                  <span
+                    className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 ${
+                      isOpen ? "bg-accent border-accent" : "border-border"
+                    }`}
+                  >
+                    {isOpen && <span className="w-2 h-2 bg-accent-foreground rounded-sm" />}
+                  </span>
+                  <span className="font-medium text-foreground">{day.title}</span>
+                </button>
+              </div>
+
+              {isOpen && (
+                <div className="grid md:grid-cols-2 gap-4 mt-4 pl-8">
+                  <div className="grid gap-2">
+                    <Label htmlFor={`${day.id}-open`}>Opening Time</Label>
+                    <Input
+                      id={`${day.id}-open`}
+                      type="time"
+                      value={timing?.open || ""}
+                      onChange={(e) => updateTiming(day.id, "open", e.target.value)}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor={`${day.id}-close`}>Closing Time</Label>
+                    <Input
+                      id={`${day.id}-close`}
+                      type="time"
+                      value={timing?.close || ""}
+                      onChange={(e) => updateTiming(day.id, "close", e.target.value)}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="businessHoursEnd">Closing Time</Label>
-              <Input
-                id="businessHoursEnd"
-                type="time"
-                value={data.businessHoursEnd}
-                onChange={(e) => updateData({ businessHoursEnd: e.target.value })}
-              />
-            </div>
+          )
+        })}
+
+        {data.daysOpen && data.daysOpen.length > 0 && (
+          <div className="bg-muted/50 rounded-lg p-4 border border-border">
+            <p className="text-sm text-muted-foreground">
+              Operating: <span className="font-medium text-foreground">{data.daysOpen.length} days per week</span>
+            </p>
           </div>
-        </div>
-        
-        <div className="grid gap-4">
-          <h3 className="font-medium text-foreground">Days Open</h3>
-          <p className="text-sm text-muted-foreground">Select all the days your business operates</p>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-            {daysOfWeek.map((day) => (
-              <button
-                key={day.id}
-                type="button"
-                onClick={() => toggleDay(day.id)}
-                className={`
-                  p-4 rounded-xl border-2 text-center transition-all duration-200
-                  ${data.daysOpen?.includes(day.id)
-                    ? "border-accent bg-accent/10 text-foreground"
-                    : "border-border bg-card text-muted-foreground hover:border-muted-foreground/30"
-                  }
-                `}
-              >
-                <span className="block text-sm font-medium">{day.short}</span>
-              </button>
-            ))}
-          </div>
-          
-          {data.daysOpen && data.daysOpen.length > 0 && (
-            <div className="bg-muted/50 rounded-lg p-4 border border-border">
-              <p className="text-sm text-muted-foreground">
-                Operating: <span className="font-medium text-foreground">{data.daysOpen.length} days per week</span>
-              </p>
-            </div>
-          )}
-        </div>
+        )}
       </div>
-      
+
       <NavigationButtons />
     </StepWrapper>
   )

@@ -42,7 +42,7 @@ export function NavigationButtons({
         <div />
       )}
       
-      {showNext && currentStep < totalSteps && (
+      {showNext && currentStep < 15 && (
         <Button onClick={handleNext} className="gap-2 bg-primary hover:bg-primary/90">
           {nextLabel}
           <ChevronRight className="w-4 h-4" />

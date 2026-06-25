@@ -5,16 +5,12 @@ import { ProgressBar } from "./progress-bar"
 import { SidebarNavigation } from "./sidebar-navigation"
 import { Step1Welcome } from "./steps/step-1-welcome"
 import { Step2BasicDetails } from "./steps/step-2-basic-details"
-import { Step3WebsitePurpose } from "./steps/step-3-website-purpose"
-import { Step4GSTTax } from "./steps/step-4-gst-tax"
 import { Step5Operating } from "./steps/step-5-operating"
-import { Step6BusinessType } from "./steps/step-6-business-type"
-import { Step7LocalServices } from "./steps/step-7-local-services"
-import { Step8HealthcareProfessional } from "./steps/step-8-healthcare-professional"
-import { Step9RetailHospitality } from "./steps/step-9-retail-hospitality"
-import { Step10EducationIndustrial } from "./steps/step-10-education-industrial"
+import { Step6ProductsServices } from "./steps/step-6-products-services"
 import { Step11BusinessUSP } from "./steps/step-11-business-usp"
 import { Step12AboutUs } from "./steps/step-12-about-us"
+import { Step12AWhyChooseUs } from "./steps/Step12-A-WhyChooseUs"
+import { Step12BSocialMedia } from "./steps/step-12b-social-media"
 import { Step13Licenses } from "./steps/step-13-licenses"
 import { Step14Review } from "./steps/step-14-review"
 import { Step15Success } from "./steps/step-15-success"
@@ -22,16 +18,12 @@ import { Step15Success } from "./steps/step-15-success"
 const steps: { [key: number]: React.ComponentType } = {
   1: Step1Welcome,
   2: Step2BasicDetails,
-  3: Step3WebsitePurpose,
-  4: Step4GSTTax,
   5: Step5Operating,
-  6: Step6BusinessType,
-  7: Step7LocalServices,
-  8: Step8HealthcareProfessional,
-  9: Step9RetailHospitality,
-  10: Step10EducationIndustrial,
+  6: Step6ProductsServices,
   11: Step11BusinessUSP,
   12: Step12AboutUs,
+  12.5: Step12AWhyChooseUs,
+  12.7: Step12BSocialMedia,
   13: Step13Licenses,
   14: Step14Review,
   15: Step15Success,
@@ -39,11 +31,11 @@ const steps: { [key: number]: React.ComponentType } = {
 
 export function QuestionnaireLayout() {
   const { currentStep } = useQuestionnaire()
-  
+
   const CurrentStepComponent = steps[currentStep] || Step1Welcome
   const showSidebar = currentStep > 1 && currentStep < 15
   const showProgress = currentStep > 1 && currentStep < 15
-  
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -71,12 +63,12 @@ export function QuestionnaireLayout() {
           )}
         </div>
       </header>
-      
+
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <div className="flex gap-8">
           {showSidebar && <SidebarNavigation />}
-          
+
           <div className={`flex-1 ${showSidebar ? "max-w-3xl" : "max-w-4xl mx-auto"}`}>
             <div className="bg-card rounded-2xl shadow-sm border border-border p-6 md:p-8">
               <CurrentStepComponent />
@@ -84,7 +76,7 @@ export function QuestionnaireLayout() {
           </div>
         </div>
       </main>
-      
+
       {/* Footer */}
       <footer className="border-t border-border py-6 mt-auto">
         <div className="container mx-auto px-4">

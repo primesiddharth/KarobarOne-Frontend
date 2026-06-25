@@ -100,10 +100,10 @@ export function Step15Success() {
           Start New Questionnaire
         </Button>
         <Link 
-          href="/excellence"
+          href="/dashboard"
           className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[#6D4C41] hover:bg-[#5D4037] text-white transition-colors"
         >
-          View Excellence Website →
+          View Our Designs →
         </Link>
       </div>
     </div>
