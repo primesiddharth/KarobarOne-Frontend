@@ -1,8 +1,23 @@
+"use client";
+
+import { useRef } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowRight, TrendingUp, Users, DollarSign, ShoppingCart } from "lucide-react";
 import Link from "next/link";
+
 export function Hero() {
+  const videoWrapRef = useRef<HTMLDivElement>(null);
+
+  const { scrollYProgress } = useScroll({
+    target: videoWrapRef,
+    offset: ["start 0.9", "start 0.2"], // video viewport me aate hi expand start
+  });
+
+  const scale = useTransform(scrollYProgress, [0, 1], [0.75, 1]);
+  const borderRadius = useTransform(scrollYProgress, [0, 1], [24, 0]);
+
   return (
-    <section  id="home" className="py-24 bg-white">
+    <section id="home" className="py-24 bg-white">
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-16">
           <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
@@ -18,7 +33,24 @@ export function Hero() {
             <ArrowRight className="w-5 h-5" />
           </Link>
         </div>
-        
+
+        {/* Scroll-maximize video (StoreHippo style) */}
+        <div ref={videoWrapRef} className="mb-16 flex justify-center">
+          <motion.div
+            style={{ scale, borderRadius }}
+            className="w-full max-w-5xl aspect-video overflow-hidden shadow-2xl"
+          >
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full h-full object-cover"
+              src="/videos/hero-video.mp4"
+            />
+          </motion.div>
+        </div>
+
         <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-2xl p-8 border border-gray-200">
           <div className="bg-gradient-to-br from-[#5b4ef9] to-[#4a3ee0] rounded-xl p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
@@ -62,7 +94,7 @@ export function Hero() {
               </div>
             </div>
           </div>
-          
+
           <div className="grid grid-cols-3 gap-4">
             <div className="bg-gray-50 rounded-lg p-4">
               <div className="h-2 bg-[#5b4ef9] rounded-full mb-2" style={{ width: '75%' }}></div>

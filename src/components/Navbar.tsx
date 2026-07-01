@@ -32,13 +32,21 @@ export function Navbar() {
             <a href="#pricing" className="text-gray-700 hover:text-[#5b4ef9] transition-colors">Pricing</a>
           </div>
 
-          {/* Desktop Login */}
-          <Link
-            href="/login"
-            className="hidden md:block bg-[#5b4ef9] text-white px-6 py-2 rounded-lg hover:bg-[#4a3ee0] transition-colors"
-          >
-            Login
-          </Link>
+          {/* Desktop Buttons */}
+          <div className="hidden md:flex items-center gap-3">
+            <Link
+              href="/book-demo"
+              className="border border-[#5b4ef9] text-[#5b4ef9] px-6 py-2 rounded-lg hover:bg-[#5b4ef9] hover:text-white transition-colors"
+            >
+              Book a Demo
+            </Link>
+            <Link
+              href="/login"
+              className="bg-[#5b4ef9] text-white px-6 py-2 rounded-lg hover:bg-[#4a3ee0] transition-colors"
+            >
+              Login
+            </Link>
+          </div>
 
           {/* Mobile Hamburger */}
           <button
@@ -58,7 +66,7 @@ export function Navbar() {
       {/* Mobile Menu with Animation */}
       <div
         className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
-          isMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+          isMenuOpen ? "max-h-[32rem] opacity-100" : "max-h-0 opacity-0"
         }`}
       >
         <div className="px-6 pb-4 border-t border-gray-200">
@@ -70,6 +78,13 @@ export function Navbar() {
             <a href="#pricing" className="text-gray-700 hover:text-[#5b4ef9] transition-colors py-2" onClick={() => setIsMenuOpen(false)}>Pricing</a>
             <a href="#blog" className="text-gray-700 hover:text-[#5b4ef9] transition-colors py-2" onClick={() => setIsMenuOpen(false)}>Blog</a>
             <a href="#careers" className="text-gray-700 hover:text-[#5b4ef9] transition-colors py-2" onClick={() => setIsMenuOpen(false)}>Careers</a>
+            <Link
+              href="/book-demo"
+              className="border border-[#5b4ef9] text-[#5b4ef9] px-6 py-2 rounded-lg hover:bg-[#5b4ef9] hover:text-white transition-colors text-center"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Book a Demo
+            </Link>
             <Link
               href="/login"
               className="bg-[#5b4ef9] text-white px-6 py-2 rounded-lg hover:bg-[#4a3ee0] transition-colors text-center"
