@@ -5,6 +5,7 @@ import { Features } from "../components/Features";
 import { Offerings } from "../components/Offerings";
 import { Timeline } from "../components/Timeline";
 import { Pricing } from "../components/Pricing";
+import { Partnerships } from "../components/Partnerships";
 import { Testimonials } from "../components/Testimonials";
 import { About } from "../components/About";
 import { Footer } from "../components/Footer";
@@ -19,6 +20,7 @@ export default function HomePage() {
       <Offerings />
       <Timeline />
       <Pricing />
+      <Partnerships />
       <Testimonials />
       <About />
       <Footer />
