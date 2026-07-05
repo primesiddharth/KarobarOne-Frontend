@@ -1,7 +1,13 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import {
+  motion,
+  useScroll,
+  useTransform,
+  useMotionValueEvent,
+  AnimatePresence,
+} from "framer-motion";
 import { ArrowRight, TrendingUp, Users, DollarSign, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 
@@ -28,53 +34,85 @@ function VanishingText() {
     return () => clearInterval(interval);
   }, []);
 
+  // Simple crossfade + blur, no absolute positioning, no fixed-height clip box.
+  // This can never crop glyphs and can never push the page into horizontal scroll.
   return (
-    <span className="relative inline-block h-[1.4em] overflow-hidden align-bottom min-w-[320px] md:min-w-[460px]">
-      <AnimatePresence mode="wait">
-        <motion.span
-          key={VANISHING_WORDS[index]}
-          initial={{ opacity: 0, y: 16, filter: "blur(4px)" }}
-          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-          exit={{ opacity: 0, y: -16, filter: "blur(4px)" }}
-          transition={{ duration: 0.5, ease: "easeInOut" }}
-          className="absolute left-0 top-0 text-[#5b4ef9] font-semibold whitespace-nowrap"
-        >
-          {VANISHING_WORDS[index]}
-        </motion.span>
-      </AnimatePresence>
-    </span>
+    <AnimatePresence mode="wait">
+      <motion.span
+        key={VANISHING_WORDS[index]}
+        initial={{ opacity: 0, filter: "blur(6px)" }}
+        animate={{ opacity: 1, filter: "blur(0px)" }}
+        exit={{ opacity: 0, filter: "blur(6px)" }}
+        transition={{ duration: 0.5, ease: "easeInOut" }}
+        className="inline-block font-semibold bg-gradient-to-r from-[#5b4ef9] via-[#8b5cf6] to-[#ec4899] bg-clip-text text-transparent"
+      >
+        {VANISHING_WORDS[index]}
+      </motion.span>
+    </AnimatePresence>
   );
 }
 
 export function Hero() {
-  const videoWrapRef = useRef<HTMLDivElement>(null);
+  const placeholderRef = useRef<HTMLDivElement>(null);
+  const spacerRef = useRef<HTMLDivElement>(null);
 
-  // Tracks the video's own wrapper as it moves up through the viewport,
-  // so it keeps maximizing (within its own column) as the page is scrolled.
+  const [rect, setRect] = useState<{ top: number; left: number; width: number; height: number } | null>(null);
+  const [viewport, setViewport] = useState({ width: 0, height: 0 });
+  // Once the grow -> hold -> shrink -> fade sequence finishes, we unmount the
+  // video entirely so it can never sit fixed on screen over later sections.
+  const [videoDone, setVideoDone] = useState(false);
+
+  useEffect(() => {
+    function measure() {
+      if (placeholderRef.current) {
+        const r = placeholderRef.current.getBoundingClientRect();
+        setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
+      }
+      setViewport({ width: window.innerWidth, height: window.innerHeight });
+    }
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
+
   const { scrollYProgress } = useScroll({
-    target: videoWrapRef,
-    offset: ["start end", "start 0.15"],
+    target: spacerRef,
+    offset: ["start start", "end start"],
   });
 
-  const scale = useTransform(scrollYProgress, [0, 1], [0.8, 1.12]);
-  const borderRadius = useTransform(scrollYProgress, [0, 1], [24, 12]);
+  useMotionValueEvent(scrollYProgress, "change", (v) => {
+    if (v >= 0.78 && !videoDone) setVideoDone(true);
+    if (v < 0.78 && videoDone) setVideoDone(false);
+  });
+
+  const textOpacity = useTransform(scrollYProgress, [0, 0.25], [1, 0]);
+
+  // 4 phases: grow to full screen -> hold -> shrink back -> fade out.
+  const stops = [0, 0.32, 0.5, 0.75];
+  const r0 = rect ?? { top: 0, left: 0, width: 0, height: 0 };
+
+  const top = useTransform(scrollYProgress, stops, [r0.top, 0, 0, r0.top]);
+  const left = useTransform(scrollYProgress, stops, [r0.left, 0, 0, r0.left]);
+  const width = useTransform(scrollYProgress, stops, [r0.width, viewport.width, viewport.width, r0.width]);
+  const height = useTransform(scrollYProgress, stops, [r0.height, viewport.height, viewport.height, r0.height]);
+  const borderRadius = useTransform(scrollYProgress, stops, [24, 0, 0, 24]);
+  const videoOpacity = useTransform(scrollYProgress, [0.6, 0.75], [1, 0]);
 
   return (
-    <section id="home" className="py-24 bg-white">
-      <div className="max-w-7xl mx-auto px-6">
-        {/* Top section: left text / right video */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center mb-20">
-          {/* Left: Text content */}
-          <div className="text-left">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight bg-gradient-to-r from-[rgb(249,78,212)] via-[rgb(205,111,249)] to-[#4934e7] bg-clip-text text-transparent">
+    <section id="home" className="bg-white overflow-x-hidden">
+      <div className="max-w-7xl mx-auto px-6 pt-24">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center mb-4">
+          {/* Left: text content */}
+          <motion.div style={{ opacity: textOpacity }} className="text-left">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight text-pink-500">
               The complete Commerce Platform To Build, Sell &amp; Scale
             </h1>
 
-            <div className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
+            <div className="text-4xl md:text-5xl font-bold mb-4 leading-tight">
               <VanishingText />
             </div>
 
-            <p className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight">
+            <p className="text-4xl md:text-5xl font-bold mb-4 leading-tight text-[#5b4ef9]">
               For every Passionate &amp; Ambitious Business
             </p>
 
@@ -92,27 +130,44 @@ export function Hero() {
               Get Started Free
               <ArrowRight className="w-5 h-5" />
             </Link>
-          </div>
+          </motion.div>
 
-          {/* Right: Video that maximizes within its own area on scroll */}
-          <div className="flex justify-center md:justify-end overflow-visible">
-            <motion.div
-              ref={videoWrapRef}
-              style={{ scale, borderRadius }}
-              className="w-full max-w-md aspect-video overflow-hidden shadow-2xl"
-            >
-              <video
-                autoPlay
-                muted
-                loop
-                playsInline
-                className="w-full h-full object-cover"
-                src="/videos/hero-video.mp4"
-              />
-            </motion.div>
+          {/* Right: invisible placeholder marking the video's home position/size */}
+          <div className="flex justify-center md:justify-end">
+            <div ref={placeholderRef} className="w-full max-w-md aspect-video opacity-0" />
           </div>
         </div>
 
+        {/* Scroll room for grow -> hold -> shrink -> fade */}
+        <div ref={spacerRef} className="h-[220vh]" />
+      </div>
+
+      {rect && !videoDone && (
+        <motion.div
+          style={{
+            position: "fixed",
+            top,
+            left,
+            width,
+            height,
+            borderRadius,
+            opacity: videoOpacity,
+            zIndex: 40,
+          }}
+          className="overflow-hidden shadow-2xl pointer-events-none"
+        >
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="w-full h-full object-cover"
+            src="/videos/hero-video.mp4"
+          />
+        </motion.div>
+      )}
+
+      <div className="max-w-7xl mx-auto px-6 py-24">
         <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-2xl p-8 border border-gray-200">
           <div className="bg-gradient-to-br from-[#5b4ef9] to-[#4a3ee0] rounded-xl p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
