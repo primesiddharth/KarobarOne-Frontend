@@ -5,7 +5,6 @@ import {
   motion,
   useScroll,
   useTransform,
-  useMotionValueEvent,
   AnimatePresence,
 } from "framer-motion";
 import { ArrowRight, TrendingUp, Users, DollarSign, ShoppingCart } from "lucide-react";
@@ -34,8 +33,6 @@ function VanishingText() {
     return () => clearInterval(interval);
   }, []);
 
-  // Simple crossfade + blur, no absolute positioning, no fixed-height clip box.
-  // This can never crop glyphs and can never push the page into horizontal scroll.
   return (
     <AnimatePresence mode="wait">
       <motion.span
@@ -53,57 +50,28 @@ function VanishingText() {
 }
 
 export function Hero() {
-  const placeholderRef = useRef<HTMLDivElement>(null);
-  const spacerRef = useRef<HTMLDivElement>(null);
-
-  const [rect, setRect] = useState<{ top: number; left: number; width: number; height: number } | null>(null);
-  const [viewport, setViewport] = useState({ width: 0, height: 0 });
-  // Once the grow -> hold -> shrink -> fade sequence finishes, we unmount the
-  // video entirely so it can never sit fixed on screen over later sections.
-  const [videoDone, setVideoDone] = useState(false);
-
-  useEffect(() => {
-    function measure() {
-      if (placeholderRef.current) {
-        const r = placeholderRef.current.getBoundingClientRect();
-        setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
-      }
-      setViewport({ width: window.innerWidth, height: window.innerHeight });
-    }
-    measure();
-    window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
-  }, []);
+  // This wrapper's height is exactly how much scroll distance the pin
+  // effect uses. Because the video is position:sticky (not fixed), it
+  // visually fills this entire range the whole time - growing then
+  // shrinking - so there is never any empty/dead space, and scrolling
+  // up always correctly reverses it (no JS measurement involved at all).
+  const pinWrapRef = useRef<HTMLDivElement>(null);
 
   const { scrollYProgress } = useScroll({
-    target: spacerRef,
-    offset: ["start start", "end start"],
+    target: pinWrapRef,
+    offset: ["start start", "end end"],
   });
 
-  useMotionValueEvent(scrollYProgress, "change", (v) => {
-    if (v >= 0.78 && !videoDone) setVideoDone(true);
-    if (v < 0.78 && videoDone) setVideoDone(false);
-  });
-
-  const textOpacity = useTransform(scrollYProgress, [0, 0.25], [1, 0]);
-
-  // 4 phases: grow to full screen -> hold -> shrink back -> fade out.
-  const stops = [0, 0.32, 0.5, 0.75];
-  const r0 = rect ?? { top: 0, left: 0, width: 0, height: 0 };
-
-  const top = useTransform(scrollYProgress, stops, [r0.top, 0, 0, r0.top]);
-  const left = useTransform(scrollYProgress, stops, [r0.left, 0, 0, r0.left]);
-  const width = useTransform(scrollYProgress, stops, [r0.width, viewport.width, viewport.width, r0.width]);
-  const height = useTransform(scrollYProgress, stops, [r0.height, viewport.height, viewport.height, r0.height]);
-  const borderRadius = useTransform(scrollYProgress, stops, [24, 0, 0, 24]);
-  const videoOpacity = useTransform(scrollYProgress, [0.6, 0.75], [1, 0]);
+  // grow (0 -> 0.5) then shrink back (0.5 -> 1), video always visible
+  const scale = useTransform(scrollYProgress, [0, 0.5, 1], [1, 2.6, 1]);
+  const borderRadius = useTransform(scrollYProgress, [0, 0.5, 1], [24, 4, 24]);
 
   return (
-    <section id="home" className="bg-white overflow-x-hidden">
+    <section id="home" className="bg-white">
       <div className="max-w-7xl mx-auto px-6 pt-24">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start mb-4">
           {/* Left: text content */}
-          <motion.div style={{ opacity: textOpacity }} className="text-left">
+          <div className="text-left">
             <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight text-pink-500">
               The complete Commerce Platform To Build, Sell &amp; Scale
             </h1>
@@ -130,42 +98,36 @@ export function Hero() {
               Get Started Free
               <ArrowRight className="w-5 h-5" />
             </Link>
-          </motion.div>
+          </div>
 
-          {/* Right: invisible placeholder marking the video's home position/size */}
-          <div className="flex justify-center md:justify-end">
-            <div ref={placeholderRef} className="w-full max-w-md aspect-video opacity-0" />
+          {/* Right: sticky-pinned video. The tall tracker below is
+              absolutely positioned, so it never stretches this grid row -
+              the row's height is decided by the text column only, keeping
+              both columns perfectly top-aligned. */}
+          <div className="relative">
+            <div ref={pinWrapRef} className="absolute inset-x-0 top-0 h-[160vh]">
+              <div className="sticky top-0 flex justify-center md:justify-end">
+                <motion.div
+                  style={{ scale, borderRadius }}
+                  className="w-full max-w-md aspect-video overflow-hidden shadow-2xl relative z-30"
+                >
+                  <video
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    className="w-full h-full object-cover"
+                    src="/videos/hero-video.mp4"
+                  />
+                </motion.div>
+              </div>
+            </div>
+            {/* Invisible spacer so this column still reserves the video's
+                normal box size for correct alignment at rest */}
+            <div className="w-full max-w-md aspect-video invisible" />
           </div>
         </div>
-
-        {/* Scroll room for grow -> hold -> shrink -> fade */}
-        <div ref={spacerRef} className="h-[220vh]" />
       </div>
-
-      {rect && !videoDone && (
-        <motion.div
-          style={{
-            position: "fixed",
-            top,
-            left,
-            width,
-            height,
-            borderRadius,
-            opacity: videoOpacity,
-            zIndex: 40,
-          }}
-          className="overflow-hidden shadow-2xl pointer-events-none"
-        >
-          <video
-            autoPlay
-            muted
-            loop
-            playsInline
-            className="w-full h-full object-cover"
-            src="/videos/hero-video.mp4"
-          />
-        </motion.div>
-      )}
 
       <div className="max-w-7xl mx-auto px-6 py-24">
         <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-2xl p-8 border border-gray-200">
