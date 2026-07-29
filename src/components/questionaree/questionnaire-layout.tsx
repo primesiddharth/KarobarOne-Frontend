@@ -1,5 +1,5 @@
 "use client"
-
+import { LiveWebsitePreview } from "./preview/LiveWebsitePreview"
 import { useQuestionnaire } from "@/context/questionnaire-context"
 import { ProgressBar } from "./progress-bar"
 import { SidebarNavigation } from "./sidebar-navigation"
@@ -66,15 +66,33 @@ export function QuestionnaireLayout() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        <div className="flex gap-8">
-          {showSidebar && <SidebarNavigation />}
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
 
-          <div className={`flex-1 ${showSidebar ? "max-w-3xl" : "max-w-4xl mx-auto"}`}>
-            <div className="bg-card rounded-2xl shadow-sm border border-border p-6 md:p-8">
-              <CurrentStepComponent />
-            </div>
-          </div>
-        </div>
+  {showSidebar && (
+    <div className="xl:col-span-2">
+      <SidebarNavigation />
+    </div>
+  )}
+
+  <div
+    className={
+      showSidebar
+        ? "xl:col-span-5"
+        : "xl:col-span-6 xl:col-start-4"
+    }
+  >
+    <div className="bg-card rounded-2xl shadow-sm border border-border p-6 md:p-8">
+      <CurrentStepComponent />
+    </div>
+  </div>
+
+  {showSidebar && (
+    <div className="xl:col-span-5">
+      <LiveWebsitePreview />
+    </div>
+  )}
+
+</div>
       </main>
 
       {/* Footer */}

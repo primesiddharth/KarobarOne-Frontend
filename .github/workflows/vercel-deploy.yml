@@ -9,6 +9,7 @@ env:
   VERCEL_TOKEN: ${{ secrets.DAYVERCELTOKEN }}
   VERCEL_ORG_ID: ${{ secrets.TEAMID }}
   VERCEL_PROJECT_ID: ${{ secrets.KAROBARONEPROJECTID }}
+  NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
 
 jobs:
   build-and-deploy:

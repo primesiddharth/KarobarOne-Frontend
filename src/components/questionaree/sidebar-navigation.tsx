@@ -21,8 +21,8 @@ export function SidebarNavigation() {
   const { currentStep, setCurrentStep } = useQuestionnaire()
   
   return (
-    <nav className="hidden lg:block w-64 shrink-0">
-      <div className="sticky top-8 bg-card rounded-xl shadow-sm border border-border p-4">
+    <nav className="hidden xl:block w-full">
+      <div className="sticky top-24 w-full rounded-2xl border bg-card p-5 shadow-sm">
         <h3 className="font-semibold text-foreground mb-4">Progress</h3>
         <ul className="space-y-1">
           {steps.map((step) => {
