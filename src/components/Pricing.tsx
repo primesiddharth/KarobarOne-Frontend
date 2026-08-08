@@ -15,9 +15,8 @@ const plans = [
       "5 products",
       "Payment gateway integration",
       "Email support",
-      "2% transaction fee"
+      "2% transaction fee",
     ],
-    highlight: false
   },
   {
     name: "Growth",
@@ -30,9 +29,8 @@ const plans = [
       "Marketing tools",
       "WhatsApp integration",
       "Priority support",
-      "1.5% transaction fee"
+      "1.5% transaction fee",
     ],
-    highlight: false
   },
   {
     name: "Pro",
@@ -45,9 +43,8 @@ const plans = [
       "Dedicated account manager",
       "API access",
       "24/7 phone support",
-      "1% transaction fee"
+      "1% transaction fee",
     ],
-    highlight: false
   },
   {
     name: "Enterprise",
@@ -60,10 +57,9 @@ const plans = [
       "Multi-store management",
       "Advanced security",
       "SLA guarantee",
-      "Negotiable transaction fee"
+      "Negotiable transaction fee",
     ],
-    highlight: false
-  }
+  },
 ];
 
 export function Pricing() {
@@ -73,40 +69,42 @@ export function Pricing() {
   const isEnterprise = selectedPlanIndex === 3;
 
   return (
-    <section id="pricing" className="py-24 bg-gray-50">
-      <div className="max-w-7xl mx-auto px-6">
+    <section id="pricing" className="bg-gray-50 py-24">
+      <div className="mx-auto max-w-7xl px-6">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">Simple, Transparent Pricing</h2>
+          <h2 className="mb-4 text-4xl font-bold text-gray-900">Simple, Transparent Pricing</h2>
           <p className="text-xl text-gray-600">Choose the plan that fits your business needs</p>
-          <div className="mt-6 inline-block bg-green-100 border border-green-300 rounded-lg px-6 py-3">
-            <p className="text-green-800 font-semibold">🎉 Special Offer: ₹0 subscription fee for first 3 months!</p>
+          <div className="mt-6 inline-block rounded-lg border border-green-300 bg-green-100 px-6 py-3">
+            <p className="font-semibold text-green-800">
+              🎉 Special Offer: ₹0 subscription fee for first 3 months!
+            </p>
           </div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid gap-8 md:grid-cols-2">
           {plans.map((plan, index) => (
             <div
-              key={index}
-              className={`bg-white rounded-2xl p-8 border ${
+              key={plan.name}
+              className={`rounded-2xl border bg-white p-8 ${
                 index === 0
-                  ? "border-[#5b4ef9] ring-2 ring-[#5b4ef9] ring-opacity-50"
+                  ? "border-[#5b4ef9] ring-2 ring-[#5b4ef9]/50"
                   : "border-gray-200"
               }`}
             >
               <div className="mb-6">
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
-                <p className="text-gray-600 mb-4">{plan.description}</p>
+                <h3 className="mb-2 text-2xl font-bold text-gray-900">{plan.name}</h3>
+                <p className="mb-4 text-gray-600">{plan.description}</p>
                 <div className="flex items-baseline gap-2">
                   <span className="text-4xl font-bold text-[#5b4ef9]">{plan.price}</span>
                   <span className="text-gray-600">/ {plan.period}</span>
                 </div>
               </div>
 
-              <ul className="space-y-3 mb-8">
-                {plan.features.map((feature, idx) => (
-                  <li key={idx} className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-[#5b4ef9] bg-opacity-10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Check className="w-3 h-3 text-[#5b4ef9]" />
+              <ul className="mb-8 space-y-3">
+                {plan.features.map((feature) => (
+                  <li key={feature} className="flex items-start gap-3">
+                    <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[#5b4ef9]/10">
+                      <Check className="h-3 w-3 text-[#5b4ef9]" />
                     </div>
                     <span className="text-gray-700">{feature}</span>
                   </li>
@@ -115,7 +113,7 @@ export function Pricing() {
 
               <button
                 onClick={() => setSelectedPlanIndex(index)}
-                className={`w-full py-3 rounded-lg transition-colors ${
+                className={`w-full rounded-lg py-3 transition-colors ${
                   index === 0
                     ? "bg-[#5b4ef9] text-white hover:bg-[#4a3ee0]"
                     : "bg-gray-100 text-gray-900 hover:bg-gray-200"
@@ -128,7 +126,6 @@ export function Pricing() {
         </div>
       </div>
 
-      {/* Glass modal - plan button click pe khulta hai */}
       <GlassModal
         isOpen={selectedPlan !== null}
         onClose={() => setSelectedPlanIndex(null)}
@@ -142,19 +139,17 @@ export function Pricing() {
             </div>
 
             <ul className="space-y-2">
-              {selectedPlan.features.map((feature, idx) => (
-                <li key={idx} className="flex items-start gap-2 text-sm text-white/90">
-                  <Check className="w-4 h-4 text-[#8f87ff] flex-shrink-0 mt-0.5" />
+              {selectedPlan.features.map((feature) => (
+                <li key={feature} className="flex items-start gap-2 text-sm text-white/90">
+                  <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#8f87ff]" />
                   <span>{feature}</span>
                 </li>
               ))}
             </ul>
 
             <button
-              className="w-full py-3 rounded-lg bg-[#5b4ef9] text-white font-medium
-                         hover:bg-[#4a3ee0] transition-colors mt-2"
+              className="mt-2 w-full rounded-lg bg-[#5b4ef9] py-3 font-medium text-white transition-colors hover:bg-[#4a3ee0]"
               onClick={() => {
-                // yahan actual signup/contact flow trigger karo
                 setSelectedPlanIndex(null);
               }}
             >
