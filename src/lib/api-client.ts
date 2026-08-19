@@ -1,6 +1,6 @@
 // src/lib/api-client.ts
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
 interface ApiOptions extends RequestInit {
   token?: string;
@@ -12,7 +12,6 @@ export class ApiError extends Error {
 
   constructor(message: string, status: number, body: unknown) {
     super(message);
-    this.name = "ApiError";
     this.status = status;
     this.body = body;
   }
@@ -22,25 +21,13 @@ export async function apiClient<T>(
   endpoint: string,
   options: ApiOptions = {}
 ): Promise<T> {
-  if (!BASE_URL) {
-    throw new Error(
-      "NEXT_PUBLIC_API_BASE_URL is not configured in .env.local"
-    );
-  }
-
   const { token, headers, ...rest } = options;
 
   const res = await fetch(`${BASE_URL}${endpoint}`, {
     ...rest,
     headers: {
       "Content-Type": "application/json",
-
-      ...(token
-        ? {
-            Authorization: `Bearer ${token}`,
-          }
-        : {}),
-
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...headers,
     },
   });
@@ -52,19 +39,12 @@ export async function apiClient<T>(
   const data = await res.json().catch(() => null);
 
   if (!res.ok) {
-    let message = `API Error: ${res.status}`;
-
-    if (typeof data?.detail === "string") {
-      message = data.detail;
-    } else if (Array.isArray(data?.detail)) {
-      message = data.detail
-        .map((error: { msg?: string }) => error.msg || "Validation error")
-        .join(", ");
-    } else if (typeof data?.error?.message === "string") {
-      message = data.error.message;
-    } else if (typeof data?.message === "string") {
-      message = data.message;
-    }
+    const message =
+      typeof data?.detail === "string"
+        ? data.detail
+        : Array.isArray(data?.detail)
+        ? data.detail.map((d: { msg: string }) => d.msg).join(", ")
+        : `API Error: ${res.status}`;
 
     throw new ApiError(message, res.status, data);
   }
