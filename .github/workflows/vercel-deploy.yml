@@ -6,10 +6,9 @@ on:
       - development
 
 env:
-  VERCEL_TOKEN: ${{ secrets.DAYVERCELTOKEN }}
-  VERCEL_ORG_ID: ${{ secrets.TEAMID }}
-  VERCEL_PROJECT_ID: ${{ secrets.KAROBARONEPROJECTID }}
-  NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+  VERCEL_TOKEN: ${{ secrets.TOKEN_ID }}
+  VERCEL_ORG_ID: ${{ secrets.TEAM_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.PROJECT_ID }}
 
 jobs:
   build-and-deploy:
