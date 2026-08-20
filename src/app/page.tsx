@@ -9,8 +9,7 @@ import { Partnerships } from "../components/Partnerships";
 import { Testimonials } from "../components/Testimonials";
 import { About } from "../components/About";
 import { Footer } from "../components/Footer";
-import { StoreOwnerDashboardShowcase } from "@/components/StoreOwnerDashboardShowcase";
-import { WebsiteBuilder } from "@/components/WebsiteBuilder";
+
 
 export default function HomePage() {
   return (
@@ -24,8 +23,6 @@ export default function HomePage() {
       <Pricing />
       <Partnerships />
       <Testimonials />
-      <StoreOwnerDashboardShowcase />
-      <WebsiteBuilder />
       <About />
       <Footer />
     </div>
