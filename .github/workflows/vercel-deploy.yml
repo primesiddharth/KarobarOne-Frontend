@@ -6,7 +6,7 @@ on:
       - development
 
 env:
-  VERCEL_TOKEN: ${{ secrets.TOKEN_ID }}
+  VERCEL_TOKEN: ${{ secrets.KAROBAR_ONE_FRONTEND_TOKEN }}
   VERCEL_ORG_ID: ${{ secrets.TEAM_ID }}
   VERCEL_PROJECT_ID: ${{ secrets.PROJECT_ID }}
 
