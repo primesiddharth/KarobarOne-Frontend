@@ -22,30 +22,40 @@ export interface DayTiming {
 export interface QuestionnaireData {
   // Page 2 - Business Basic Details
   businessName: string
+  legalName: string
   contactPerson: string
   designation: string
   phoneNumber: string
   email: string
   brandTagline: string
   businessNature: "product" | "service" | ""
-  
+
+  // Page 2 - Address (new)
+  businessAddressLine1: string
+  city: string
+  state: string
+  postalCode: string
+
+  // Page 2 - Industry Type (new — separate from GST/PAN registration type below)
+  industryType: string
+
   // Page 2 - GST & Tax Details (merged in)
   gstNumber: string
   panNumber: string
-  businessType: string
+  businessType: string // "gst" | "pan" — which registration type is being declared
   taxDocument: File | null
-  
+
   // Page 5 - Business Operating Details
   daysOpen: string[]
   dayTimings: { [day: string]: DayTiming }
-  
+
   // Page 6 - Products / Services
   planType: "free" | "paid" | ""
   items: BusinessItem[]
-  
+
   // Page 11 - Business USP
   businessUSP: string[]
-  
+
   // Page 12 - About Us
   promoterName: string
   promoterDesignation: string
@@ -58,15 +68,15 @@ export interface QuestionnaireData {
   problemSolved: string
   uniqueSolution: string
   trustCredibility: string
-  
+
   // Page 12.5 - Why Choose Us
   whyChooseUs: string[]
-  
+
   // Page 12.7 - Social Media
   facebookUrl: string
   instagramUrl: string
   linkedinUrl: string
-  
+
   // Page 13 - Licenses & Certifications
   businessRegistration: File | null
   taxCompliance: File | null
@@ -74,19 +84,25 @@ export interface QuestionnaireData {
   safetyCompliance: File | null
   qualityCertifications: File | null
   brandIdentity: File | null
-  
+
   // Page 14 - Confirmation
   confirmed: boolean
 }
 
 const initialData: QuestionnaireData = {
   businessName: "",
+  legalName: "",
   contactPerson: "",
   designation: "",
   phoneNumber: "",
   email: "",
   brandTagline: "",
   businessNature: "",
+  businessAddressLine1: "",
+  city: "",
+  state: "",
+  postalCode: "",
+  industryType: "",
   gstNumber: "",
   panNumber: "",
   businessType: "",
@@ -140,32 +156,27 @@ export function QuestionnaireProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<QuestionnaireData>(initialData)
   const [currentStep, setCurrentStep] = useState(1)
   const totalSteps = validSteps.length
-  
-  // Load from localStorage on mount
+
   useEffect(() => {
     const savedData = localStorage.getItem("questionnaireData")
     const savedStep = localStorage.getItem("questionnaireStep")
-    
+
     if (savedData) {
       try {
         const parsed = JSON.parse(savedData)
-        // Files cannot be stored in localStorage, so we exclude them
         setData({ ...initialData, ...parsed })
       } catch (e) {
         console.error("Failed to parse saved data:", e)
       }
     }
-    
+
     if (savedStep) {
       const parsedStep = parseFloat(savedStep)
-      // Guard against stale step numbers from removed pages
       setCurrentStep(validSteps.includes(parsedStep) ? parsedStep : 1)
     }
   }, [])
-  
-  // Save to localStorage on change
+
   useEffect(() => {
-    // Create a copy without File objects for localStorage
     const dataToSave = { ...data }
     Object.keys(dataToSave).forEach((key) => {
       const value = dataToSave[key as keyof QuestionnaireData]
@@ -173,37 +184,36 @@ export function QuestionnaireProvider({ children }: { children: ReactNode }) {
         (dataToSave as Record<string, unknown>)[key] = null
       }
     })
-    // Strip File objects out of items array too
     dataToSave.items = dataToSave.items.map((item) => ({ ...item, images: [] }))
     localStorage.setItem("questionnaireData", JSON.stringify(dataToSave))
     localStorage.setItem("questionnaireStep", currentStep.toString())
   }, [data, currentStep])
-  
+
   const updateData = (updates: Partial<QuestionnaireData>) => {
     setData((prev) => ({ ...prev, ...updates }))
   }
-  
+
   const nextStep = () => {
     const idx = validSteps.indexOf(currentStep)
     if (idx !== -1 && idx < validSteps.length - 1) {
       setCurrentStep(validSteps[idx + 1])
     }
   }
-  
+
   const prevStep = () => {
     const idx = validSteps.indexOf(currentStep)
     if (idx > 0) {
       setCurrentStep(validSteps[idx - 1])
     }
   }
-  
+
   const resetQuestionnaire = () => {
     setData(initialData)
     setCurrentStep(1)
     localStorage.removeItem("questionnaireData")
     localStorage.removeItem("questionnaireStep")
   }
-  
+
   return (
     <QuestionnaireContext.Provider
       value={{

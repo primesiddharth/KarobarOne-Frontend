@@ -1,0 +1,217 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft, Package } from "lucide-react";
+import { useAuth } from "@/context/auth-context";
+import { productApi, categoryApi, brandApi } from "@/lib/api/catalog";
+import { ApiError } from "@/lib/api-client";
+import { Category, Brand } from "@/types/catalog";
+
+function slugify(value: string): string {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+export default function AddProductPage() {
+  const { token } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const storeId = searchParams.get("storeId") || "";
+  const tenantId = searchParams.get("tenantId") || "";
+
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [sku, setSku] = useState("");
+  const [categoryId, setCategoryId] = useState("");
+  const [brandId, setBrandId] = useState("");
+
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
+
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingOptions, setIsLoadingOptions] = useState(true);
+
+  useEffect(() => {
+    if (!token) return;
+    Promise.all([categoryApi.list(token), brandApi.list(token)])
+      .then(([cats, brs]) => {
+        setCategories(cats);
+        setBrands(brs);
+      })
+      .catch((err) => {
+        if (err instanceof ApiError) setError(err.message);
+      })
+      .finally(() => setIsLoadingOptions(false));
+  }, [token]);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!token) {
+      setError("You must be logged in.");
+      return;
+    }
+    if (!tenantId || !storeId) {
+      setError("Missing tenant or store context — open this page from your dashboard.");
+      return;
+    }
+
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      await productApi.create(
+        {
+          tenantId,
+          storeId,
+          name,
+          slug: slugify(name),
+          description: description || null,
+          sku: sku || null,
+          categoryId: categoryId || null,
+          brandId: brandId || null,
+        },
+        token
+      );
+      router.push(`/catalog/products?tenantId=${tenantId}&storeId=${storeId}`);
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(err.message);
+      } else {
+        setError("Something went wrong. Please try again.");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-10 px-6">
+      <div className="max-w-lg mx-auto">
+        <Link
+          href={`/catalog/products?tenantId=${tenantId}&storeId=${storeId}`}
+          className="inline-flex items-center gap-2 text-gray-500 mb-6 hover:text-gray-700 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Products
+        </Link>
+
+        <div className="bg-white rounded-xl border border-gray-200 p-8">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="bg-[#5b4ef9]/10 p-2 rounded-lg">
+              <Package className="w-5 h-5 text-[#5b4ef9]" />
+            </div>
+            <h1 className="text-xl font-semibold text-gray-900">Add Product</h1>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-gray-700 mb-1.5 text-sm">Product Name *</label>
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5b4ef9]/30 focus:border-[#5b4ef9]"
+                placeholder="e.g. Blue Cotton Shirt"
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-700 mb-1.5 text-sm">Description</label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={3}
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5b4ef9]/30 focus:border-[#5b4ef9]"
+                placeholder="Short product description"
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-700 mb-1.5 text-sm">SKU</label>
+              <input
+                value={sku}
+                onChange={(e) => setSku(e.target.value)}
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5b4ef9]/30 focus:border-[#5b4ef9]"
+                placeholder="e.g. SHIRT-BLU-001"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-gray-700 mb-1.5 text-sm">Category</label>
+                <select
+                  value={categoryId}
+                  onChange={(e) => setCategoryId(e.target.value)}
+                  disabled={isLoadingOptions}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5b4ef9]/30"
+                >
+                  <option value="">
+                    {isLoadingOptions ? "Loading..." : "Select category"}
+                  </option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-gray-700 mb-1.5 text-sm">Brand</label>
+                <select
+                  value={brandId}
+                  onChange={(e) => setBrandId(e.target.value)}
+                  disabled={isLoadingOptions}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5b4ef9]/30"
+                >
+                  <option value="">
+                    {isLoadingOptions ? "Loading..." : "Select brand"}
+                  </option>
+                  {brands.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {categories.length === 0 && !isLoadingOptions && (
+              <p className="text-gray-400 text-xs">
+                No categories yet —{" "}
+                <Link
+                  href={`/catalog/categories?tenantId=${tenantId}&storeId=${storeId}`}
+                  className="text-[#5b4ef9] hover:underline"
+                >
+                  create one
+                </Link>{" "}
+                or assign it later.
+              </p>
+            )}
+
+            {error && (
+              <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                {error}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full bg-[#5b4ef9] text-white py-3 rounded-lg font-semibold hover:bg-[#4a3ee0] transition-colors disabled:opacity-50"
+            >
+              {isSubmitting ? "Creating..." : "Create Product"}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}

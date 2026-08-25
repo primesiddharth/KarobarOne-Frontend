@@ -24,6 +24,10 @@ export function Step2BasicDetails() {
         : "Business name must be 100 characters or less."
     }
 
+    if (!data.legalName.trim()) {
+      newErrors.legalName = "Legal / registered business name is required."
+    }
+
     if (!data.contactPerson.trim()) {
       newErrors.contactPerson = "Contact person name is required."
     }
@@ -40,12 +44,32 @@ export function Step2BasicDetails() {
       newErrors.businessNature = "Please select whether you offer products or services."
     }
 
+    if (!data.industryType.trim()) {
+      newErrors.industryType = "Please specify your industry / business type."
+    }
+
+    if (!data.businessAddressLine1.trim()) {
+      newErrors.businessAddressLine1 = "Business address is required."
+    }
+    if (!data.city.trim()) {
+      newErrors.city = "City is required."
+    }
+    if (!data.state.trim()) {
+      newErrors.state = "State is required."
+    }
+    if (!data.postalCode.trim()) {
+      newErrors.postalCode = "Postal code is required."
+    }
+
+    // PAN is always required regardless of GST/PAN registration choice below
+    if (!isValidPAN(data.panNumber)) {
+      newErrors.panNumber = "Enter a valid PAN number (e.g., ABCDE1234F)."
+    }
+
     if (!data.businessType) {
       newErrors.businessType = "Please select GST or PAN."
     } else if (data.businessType === "gst" && !isValidGST(data.gstNumber)) {
       newErrors.gstNumber = "Enter a valid GST number (e.g., 22AAAAA0000A1Z5)."
-    } else if (data.businessType === "pan" && !isValidPAN(data.panNumber)) {
-      newErrors.panNumber = "Enter a valid PAN number (e.g., ABCDE1234F)."
     }
 
     setErrors(newErrors)
@@ -58,20 +82,35 @@ export function Step2BasicDetails() {
       description="Tell us about your business and how we can contact you."
     >
       <div className="grid gap-6">
-        <div className="grid gap-2">
-          <Label htmlFor="businessName">Business Name *</Label>
-          <Input
-            id="businessName"
-            placeholder="Enter your business name"
-            value={data.businessName}
-            maxLength={100}
-            onChange={(e) => updateData({ businessName: e.target.value })}
-          />
-          {errors.businessName && (
-            <p className="text-xs text-destructive">{errors.businessName}</p>
-          )}
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid gap-2">
+            <Label htmlFor="businessName">Business Name *</Label>
+            <Input
+              id="businessName"
+              placeholder="Enter your business name"
+              value={data.businessName}
+              maxLength={100}
+              onChange={(e) => updateData({ businessName: e.target.value })}
+            />
+            {errors.businessName && (
+              <p className="text-xs text-destructive">{errors.businessName}</p>
+            )}
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="legalName">Legal / Registered Name *</Label>
+            <Input
+              id="legalName"
+              placeholder="e.g., XYZ Enterprises Pvt Ltd"
+              value={data.legalName}
+              onChange={(e) => updateData({ legalName: e.target.value })}
+            />
+            {errors.legalName && (
+              <p className="text-xs text-destructive">{errors.legalName}</p>
+            )}
+          </div>
         </div>
-        
+
         <div className="grid md:grid-cols-2 gap-6">
           <div className="grid gap-2">
             <Label htmlFor="contactPerson">Contact Person Name *</Label>
@@ -85,7 +124,7 @@ export function Step2BasicDetails() {
               <p className="text-xs text-destructive">{errors.contactPerson}</p>
             )}
           </div>
-          
+
           <div className="grid gap-2">
             <Label htmlFor="designation">Designation</Label>
             <Input
@@ -96,7 +135,7 @@ export function Step2BasicDetails() {
             />
           </div>
         </div>
-        
+
         <div className="grid md:grid-cols-2 gap-6">
           <div className="grid gap-2">
             <Label htmlFor="phoneNumber">Phone Number *</Label>
@@ -111,7 +150,7 @@ export function Step2BasicDetails() {
               <p className="text-xs text-destructive">{errors.phoneNumber}</p>
             )}
           </div>
-          
+
           <div className="grid gap-2">
             <Label htmlFor="email">Email Address *</Label>
             <Input
@@ -126,7 +165,7 @@ export function Step2BasicDetails() {
             )}
           </div>
         </div>
-        
+
         <div className="grid gap-2">
           <Label htmlFor="brandTagline">Brand Tagline</Label>
           <Input
@@ -138,6 +177,78 @@ export function Step2BasicDetails() {
           <p className="text-xs text-muted-foreground">
             A short phrase that captures your brand essence
           </p>
+        </div>
+
+        <div className="grid gap-2">
+          <Label htmlFor="industryType">Industry / Business Type *</Label>
+          <Input
+            id="industryType"
+            placeholder="e.g., Retail, Manufacturing, Restaurant, Services"
+            value={data.industryType}
+            onChange={(e) => updateData({ industryType: e.target.value })}
+          />
+          {errors.industryType && (
+            <p className="text-xs text-destructive">{errors.industryType}</p>
+          )}
+        </div>
+
+        {/* Business Address */}
+        <div className="grid gap-4 pt-2 border-t border-border">
+          <h3 className="font-medium text-foreground pt-4">Business Address</h3>
+
+          <div className="grid gap-2">
+            <Label htmlFor="businessAddressLine1">Address Line 1 *</Label>
+            <Input
+              id="businessAddressLine1"
+              placeholder="Shop/Building No., Street"
+              value={data.businessAddressLine1}
+              onChange={(e) => updateData({ businessAddressLine1: e.target.value })}
+            />
+            {errors.businessAddressLine1 && (
+              <p className="text-xs text-destructive">{errors.businessAddressLine1}</p>
+            )}
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid gap-2">
+              <Label htmlFor="city">City *</Label>
+              <Input
+                id="city"
+                placeholder="City"
+                value={data.city}
+                onChange={(e) => updateData({ city: e.target.value })}
+              />
+              {errors.city && (
+                <p className="text-xs text-destructive">{errors.city}</p>
+              )}
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="state">State *</Label>
+              <Input
+                id="state"
+                placeholder="State"
+                value={data.state}
+                onChange={(e) => updateData({ state: e.target.value })}
+              />
+              {errors.state && (
+                <p className="text-xs text-destructive">{errors.state}</p>
+              )}
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="postalCode">Postal Code *</Label>
+              <Input
+                id="postalCode"
+                placeholder="e.g., 211001"
+                value={data.postalCode}
+                onChange={(e) => updateData({ postalCode: e.target.value })}
+              />
+              {errors.postalCode && (
+                <p className="text-xs text-destructive">{errors.postalCode}</p>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Business Nature: Product or Service */}
@@ -167,6 +278,20 @@ export function Step2BasicDetails() {
         {/* GST / PAN Details */}
         <div className="grid gap-4 pt-2 border-t border-border">
           <h3 className="font-medium text-foreground pt-4">Business Tax Details</h3>
+
+          {/* PAN is now always collected, regardless of GST/PAN registration choice */}
+          <div className="grid gap-2">
+            <Label htmlFor="panNumber">PAN Number *</Label>
+            <Input
+              id="panNumber"
+              placeholder="ABCDE1234F"
+              value={data.panNumber}
+              onChange={(e) => updateData({ panNumber: e.target.value.toUpperCase() })}
+            />
+            {errors.panNumber && (
+              <p className="text-xs text-destructive">{errors.panNumber}</p>
+            )}
+          </div>
 
           <div className="grid gap-3">
             <Label>Registered Under *</Label>
@@ -204,21 +329,6 @@ export function Step2BasicDetails() {
             </div>
           )}
 
-          {data.businessType === "pan" && (
-            <div className="grid gap-2">
-              <Label htmlFor="panNumber">PAN Number *</Label>
-              <Input
-                id="panNumber"
-                placeholder="ABCDE1234F"
-                value={data.panNumber}
-                onChange={(e) => updateData({ panNumber: e.target.value.toUpperCase() })}
-              />
-              {errors.panNumber && (
-                <p className="text-xs text-destructive">{errors.panNumber}</p>
-              )}
-            </div>
-          )}
-
           {data.businessType && (
             <FileUpload
               label={data.businessType === "gst" ? "Upload GST Document" : "Upload PAN Document"}
@@ -229,7 +339,7 @@ export function Step2BasicDetails() {
           )}
         </div>
       </div>
-      
+
       <NavigationButtons onNext={validate} />
     </StepWrapper>
   )

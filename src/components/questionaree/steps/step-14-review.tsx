@@ -1,11 +1,18 @@
 "use client"
 
+import { useState } from "react"
 import { useQuestionnaire } from "@/context/questionnaire-context"
+import { useAuth } from "@/context/auth-context"
+import { useRouter } from "next/navigation"
 import { StepWrapper } from "../step-wrapper"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Pencil, Check } from "lucide-react"
+import { tenantApi } from "@/lib/api/tenant"
+import { storeApi } from "@/lib/api/store"
+import { ApiError } from "@/lib/api-client"
+import { TenantCreatePayload } from "@/types/tenant"
 
 interface ReviewCardProps {
   title: string
@@ -15,7 +22,7 @@ interface ReviewCardProps {
 
 function ReviewCard({ title, step, children }: ReviewCardProps) {
   const { setCurrentStep } = useQuestionnaire()
-  
+
   return (
     <div className="bg-card rounded-xl border border-border overflow-hidden">
       <div className="flex items-center justify-between px-4 py-3 bg-muted/50 border-b border-border">
@@ -37,15 +44,82 @@ function ReviewCard({ title, step, children }: ReviewCardProps) {
   )
 }
 
+// Turns "Rai Electronics" into "rai-electronics"
+function slugify(value: string): string {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "")
+}
+
 export function Step14Review() {
   const { data, updateData, nextStep, prevStep } = useQuestionnaire()
-  
-  const handleSubmit = () => {
-    if (data.confirmed) {
+  const { token } = useAuth()
+  const router = useRouter()
+
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const handleSubmit = async () => {
+    if (!data.confirmed) return
+
+    if (!token) {
+      setSubmitError("You need to be logged in to submit this questionnaire.")
+      return
+    }
+
+    setSubmitError(null)
+    setIsSubmitting(true)
+
+    try {
+      // Step 1: create the Tenant (business profile) from questionnaire data
+      const tenantPayload: TenantCreatePayload = {
+        businessName: data.businessName,
+        legalName: data.legalName,
+        panNumber: data.panNumber,
+        gstNumber: data.businessType === "gst" ? data.gstNumber : null,
+        ownerName: data.contactPerson,
+        email: data.email,
+        mobile: data.phoneNumber,
+        whatsappMobile: data.phoneNumber,
+        businessAddressLine1: data.businessAddressLine1,
+        city: data.city,
+        state: data.state,
+        postalCode: data.postalCode,
+        businessType: data.industryType,
+        businessDescription: data.companyHistory || null,
+      }
+      const tenant = await tenantApi.create(tenantPayload, token)
+
+      // Step 2: create the Store, now that we have a tenantId
+      await storeApi.create(
+        {
+          tenantId: tenant.id,
+          storeName: data.businessName,
+          storeSlug: slugify(data.businessName),
+          tagline: data.brandTagline || null,
+          email: data.email,
+          mobile: data.phoneNumber,
+          whatsappMobile: data.phoneNumber,
+          description: data.companyHistory || null,
+        },
+        token
+      )
+
+      // Move to the Step15Success screen
       nextStep()
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setSubmitError(err.message)
+      } else {
+        setSubmitError("Something went wrong while submitting. Please try again.")
+      }
+    } finally {
+      setIsSubmitting(false)
     }
   }
-  
+
   const formatList = (items: string[] | undefined) => {
     if (!items || items.length === 0) return "Not specified"
     return items.map(item => item.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase())).join(", ")
@@ -57,7 +131,7 @@ export function Step14Review() {
   }
 
   const daysOrder = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
-  
+
   return (
     <StepWrapper
       title="Review & Confirmation"
@@ -67,19 +141,22 @@ export function Step14Review() {
         <ReviewCard title="Business Basic Details" step={2}>
           <div className="grid gap-2">
             <p><span className="font-medium text-foreground">Business Name:</span> {data.businessName || "Not provided"}</p>
+            <p><span className="font-medium text-foreground">Legal Name:</span> {data.legalName || "Not provided"}</p>
             <p><span className="font-medium text-foreground">Contact Person:</span> {data.contactPerson || "Not provided"}</p>
             <p><span className="font-medium text-foreground">Designation:</span> {data.designation || "Not provided"}</p>
             <p><span className="font-medium text-foreground">Phone:</span> {data.phoneNumber || "Not provided"}</p>
             <p><span className="font-medium text-foreground">Email:</span> {data.email || "Not provided"}</p>
             <p><span className="font-medium text-foreground">Tagline:</span> {data.brandTagline || "Not provided"}</p>
+            <p><span className="font-medium text-foreground">Industry Type:</span> {data.industryType || "Not provided"}</p>
             <p><span className="font-medium text-foreground">Business Nature:</span> {formatLabel(data.businessNature)}</p>
-            <p><span className="font-medium text-foreground">GST Number:</span> {data.gstNumber || "Not provided"}</p>
+            <p><span className="font-medium text-foreground">Address:</span> {data.businessAddressLine1 || "Not provided"}</p>
+            <p><span className="font-medium text-foreground">City / State / Postal Code:</span> {[data.city, data.state, data.postalCode].filter(Boolean).join(", ") || "Not provided"}</p>
             <p><span className="font-medium text-foreground">PAN Number:</span> {data.panNumber || "Not provided"}</p>
-            <p><span className="font-medium text-foreground">Business Type:</span> {formatLabel(data.businessType)}</p>
+            <p><span className="font-medium text-foreground">GST Number:</span> {data.gstNumber || "Not provided"}</p>
             <p><span className="font-medium text-foreground">Tax Document:</span> {data.taxDocument?.name || "Not uploaded"}</p>
           </div>
         </ReviewCard>
-        
+
         <ReviewCard title="Operating Hours" step={5}>
           <div className="grid gap-2">
             <p><span className="font-medium text-foreground">Days Open:</span> {formatList(data.daysOpen)}</p>
@@ -99,7 +176,7 @@ export function Step14Review() {
             )}
           </div>
         </ReviewCard>
-        
+
         <ReviewCard title="Products / Services" step={6}>
           <div className="grid gap-2">
             <p><span className="font-medium text-foreground">Plan Type:</span> {formatLabel(data.planType)}</p>
@@ -116,11 +193,11 @@ export function Step14Review() {
             )}
           </div>
         </ReviewCard>
-        
+
         <ReviewCard title="Business USP" step={11}>
           <p>{formatList(data.businessUSP)}</p>
         </ReviewCard>
-        
+
         <ReviewCard title="About Us" step={12}>
           <div className="grid gap-2">
             <p><span className="font-medium text-foreground">Promoter Name:</span> {data.promoterName || "Not provided"}</p>
@@ -136,11 +213,11 @@ export function Step14Review() {
             <p><span className="font-medium text-foreground">Trust & Credibility:</span> {data.trustCredibility || "Not provided"}</p>
           </div>
         </ReviewCard>
-        
+
         <ReviewCard title="Why Choose Us" step={12.5}>
           <p>{formatList(data.whyChooseUs)}</p>
         </ReviewCard>
-        
+
         <ReviewCard title="Social Media" step={12.7}>
           <div className="grid gap-2">
             <p><span className="font-medium text-foreground">Facebook:</span> {data.facebookUrl || "Not provided"}</p>
@@ -148,7 +225,7 @@ export function Step14Review() {
             <p><span className="font-medium text-foreground">LinkedIn:</span> {data.linkedinUrl || "Not provided"}</p>
           </div>
         </ReviewCard>
-        
+
         <ReviewCard title="Licenses & Certifications" step={13}>
           <div className="grid gap-2">
             <p><span className="font-medium text-foreground">Business Registration:</span> {data.businessRegistration?.name || "Not uploaded"}</p>
@@ -160,7 +237,7 @@ export function Step14Review() {
           </div>
         </ReviewCard>
       </div>
-      
+
       <div className="bg-card rounded-xl border border-border p-6 space-y-4">
         <div className="flex items-start gap-3">
           <Checkbox
@@ -169,22 +246,28 @@ export function Step14Review() {
             onCheckedChange={(checked) => updateData({ confirmed: checked === true })}
           />
           <Label htmlFor="confirmation" className="text-sm leading-relaxed cursor-pointer">
-            I confirm that all the information provided above is accurate and complete. 
+            I confirm that all the information provided above is accurate and complete.
             I understand that this information will be used to create my business website.
           </Label>
         </div>
-        
+
+        {submitError && (
+          <p className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-3 py-2">
+            {submitError}
+          </p>
+        )}
+
         <Button
           onClick={handleSubmit}
-          disabled={!data.confirmed}
+          disabled={!data.confirmed || isSubmitting}
           className="w-full gap-2 bg-primary hover:bg-primary/90"
           size="lg"
         >
           <Check className="w-4 h-4" />
-          Submit Questionnaire
+          {isSubmitting ? "Submitting..." : "Submit Questionnaire"}
         </Button>
       </div>
-      
+
       <div className="flex justify-start">
         <Button
           variant="outline"
