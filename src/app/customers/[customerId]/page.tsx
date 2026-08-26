@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import {
@@ -17,6 +17,9 @@ import {
   X,
   Monitor,
   LogOut,
+  User,
+  Upload,
+  KeyRound,
 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { getUserIdFromToken } from "@/lib/jwt";
@@ -27,6 +30,7 @@ import {
   consentApi,
   customerSessionApi,
 } from "@/lib/api/customer-extras";
+import { customerEngineApi } from "@/lib/api/customer-engine";
 import { ApiError } from "@/lib/api-client";
 import { Customer, CustomerAddress } from "@/types/customer";
 import {
@@ -35,8 +39,10 @@ import {
   CustomerConsentLog,
   CustomerSession,
 } from "@/types/customer-extras";
+import { CustomerEngineProfile } from "@/types/customer-engine";
 
 const TABS = [
+  { id: "profile", label: "Profile", icon: User },
   { id: "addresses", label: "Addresses", icon: MapPin },
   { id: "notes", label: "Notes", icon: StickyNote },
   { id: "activity", label: "Activity", icon: Activity },
@@ -46,7 +52,7 @@ const TABS = [
 
 type TabId = (typeof TABS)[number]["id"];
 
-function CustomerDetailPageContent() {
+export default function CustomerDetailPage() {
   const { token } = useAuth();
   const userId = getUserIdFromToken(token);
   const params = useParams();
@@ -100,6 +106,7 @@ function CustomerDetailPageContent() {
           ))}
         </div>
 
+        {tab === "profile" && <ProfileTab customerId={customerId} token={token} />}
         {tab === "addresses" && <AddressesTab customerId={customerId} token={token} />}
         {tab === "notes" && (
           <NotesTab customerId={customerId} token={token} userId={userId} />
@@ -602,16 +609,194 @@ function SessionsTab({ customerId, token }: { customerId: string; token: string 
     </div>
   );
 }
-export default function CustomerDetailPage() {
+
+// ---------------- Profile Tab (customer-engine) ----------------
+function ProfileTab({ customerId, token }: { customerId: string; token: string | null }) {
+  const [profile, setProfile] = useState<CustomerEngineProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [mobile, setMobile] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  const [isUploading, setIsUploading] = useState(false);
+
+  const [activationPassword, setActivationPassword] = useState("");
+  const [isActivating, setIsActivating] = useState(false);
+
+  const load = useCallback(() => {
+    if (!token) return;
+    customerEngineApi
+      .getProfile(customerId, token)
+      .then((p) => {
+        setProfile(p);
+        setFirstName(p.firstName);
+        setLastName(p.lastName || "");
+        setEmail(p.email);
+        setMobile(p.mobile);
+      })
+      .catch((err) => {
+        if (err instanceof ApiError) setError(err.message);
+      })
+      .finally(() => setIsLoading(false));
+  }, [token, customerId]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  async function handleSaveProfile(e: React.FormEvent) {
+    e.preventDefault();
+    if (!token) return;
+    setIsSaving(true);
+    setError(null);
+    try {
+      const updated = await customerEngineApi.updateProfile(
+        customerId,
+        { firstName, lastName: lastName || null, email, mobile },
+        token
+      );
+      setProfile(updated);
+    } catch (err) {
+      if (err instanceof ApiError) setError(err.message);
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function handleUploadPhoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !token) return;
+    setIsUploading(true);
+    setError(null);
+    try {
+      const result = await customerEngineApi.uploadProfileImage(customerId, file, token);
+      setProfile((prev) => (prev ? { ...prev, profileImage: result.profileImage } : prev));
+    } catch (err) {
+      if (err instanceof ApiError) setError(err.message);
+    } finally {
+      setIsUploading(false);
+      e.target.value = "";
+    }
+  }
+
+  async function handleActivate(e: React.FormEvent) {
+    e.preventDefault();
+    if (!token || activationPassword.length < 6) return;
+    setIsActivating(true);
+    setError(null);
+    try {
+      const updated = await customerEngineApi.activate(
+        customerId,
+        { password: activationPassword },
+        token
+      );
+      setProfile(updated);
+      setActivationPassword("");
+    } catch (err) {
+      if (err instanceof ApiError) setError(err.message);
+    } finally {
+      setIsActivating(false);
+    }
+  }
+
+  if (isLoading) return <p className="text-gray-400 text-center py-8">Loading profile...</p>;
+
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center text-gray-400">
-          Loading...
+    <div className="space-y-4">
+      {error && (
+        <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+          {error}
+        </p>
+      )}
+
+      {/* Profile photo */}
+      <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-4">
+        <div className="w-16 h-16 rounded-full bg-[#5b4ef9]/10 flex items-center justify-center overflow-hidden shrink-0">
+          {profile?.profileImage ? (
+            <img src={profile.profileImage} alt="Profile" className="w-full h-full object-cover" />
+          ) : (
+            <User className="w-7 h-7 text-[#5b4ef9]" />
+          )}
         </div>
-      }
-    >
-      <CustomerDetailPageContent />
-    </Suspense>
+        <label className="inline-flex items-center gap-2 text-sm text-[#5b4ef9] hover:bg-[#5b4ef9]/10 px-3 py-1.5 rounded-lg cursor-pointer transition-colors">
+          <Upload className="w-4 h-4" />
+          {isUploading ? "Uploading..." : "Change Photo"}
+          <input type="file" accept="image/*" onChange={handleUploadPhoto} disabled={isUploading} className="hidden" />
+        </label>
+      </div>
+
+      {/* Edit profile form */}
+      <form onSubmit={handleSaveProfile} className="bg-white border border-gray-200 rounded-xl p-4 space-y-3">
+        <div className="grid grid-cols-2 gap-3">
+          <input
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            placeholder="First name"
+            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#5b4ef9]/30"
+          />
+          <input
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            placeholder="Last name"
+            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#5b4ef9]/30"
+          />
+        </div>
+        <input
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          type="email"
+          placeholder="Email"
+          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#5b4ef9]/30"
+        />
+        <input
+          value={mobile}
+          onChange={(e) => setMobile(e.target.value)}
+          placeholder="Mobile"
+          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#5b4ef9]/30"
+        />
+        <button
+          type="submit"
+          disabled={isSaving}
+          className="bg-[#5b4ef9] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#4a3ee0] transition-colors disabled:opacity-50"
+        >
+          {isSaving ? "Saving..." : "Save Profile"}
+        </button>
+      </form>
+
+      {/* Activation status / form */}
+      {profile?.status === "ACTIVE" ? (
+        <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-4 py-3">
+          <Check className="w-4 h-4" />
+          Account is active
+        </div>
+      ) : (
+        <form onSubmit={handleActivate} className="bg-white border border-gray-200 rounded-xl p-4 space-y-3">
+          <div className="flex items-center gap-2 text-sm text-gray-700">
+            <KeyRound className="w-4 h-4 text-[#5b4ef9]" />
+            Activate this account with a password (enables direct login)
+          </div>
+          <div className="flex gap-2">
+            <input
+              value={activationPassword}
+              onChange={(e) => setActivationPassword(e.target.value)}
+              type="password"
+              placeholder="Set a password (min 6 characters)"
+              className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#5b4ef9]/30"
+            />
+            <button
+              type="submit"
+              disabled={isActivating || activationPassword.length < 6}
+              className="bg-[#5b4ef9] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#4a3ee0] transition-colors disabled:opacity-50"
+            >
+              {isActivating ? "Activating..." : "Activate"}
+            </button>
+          </div>
+        </form>
+      )}
+    </div>
   );
 }
