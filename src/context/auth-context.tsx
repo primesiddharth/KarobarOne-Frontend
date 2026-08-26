@@ -72,7 +72,7 @@ export function AuthProvider({
     localStorage.setItem(TOKEN_KEY, data.accessToken);
     localStorage.setItem(
       REFRESH_TOKEN_KEY,
-      data.refreshToken
+      data.refreshToken || ""
     );
 
     localStorage.setItem(
@@ -81,7 +81,7 @@ export function AuthProvider({
     );
 
     setToken(data.accessToken);
-    setRefreshToken(data.refreshToken);
+    setRefreshToken(data.refreshToken || "");
     setTokenType(data.tokenType || "bearer");
   }
 

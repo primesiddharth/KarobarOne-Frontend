@@ -1,5 +1,4 @@
 // src/lib/api/auth.ts
-
 import { apiClient } from "../api-client";
 import {
   AuthTokenResponse,
@@ -9,13 +8,12 @@ import {
 
 export const authApi = {
   register: (data: RegisterPayload) =>
-    apiClient<AuthTokenResponse>("/api/v1/auth/register", {
+    apiClient<AuthTokenResponse>("/api/v1/chat-auth/register", {
       method: "POST",
       body: JSON.stringify(data),
     }),
-
   login: (data: LoginPayload) =>
-    apiClient<AuthTokenResponse>("/api/v1/auth/login", {
+    apiClient<AuthTokenResponse>("/api/v1/chat-auth/login", {
       method: "POST",
       body: JSON.stringify(data),
     }),

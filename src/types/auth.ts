@@ -1,12 +1,10 @@
 // src/types/auth.ts
-
 export interface RegisterPayload {
-  firstName: string;
-  lastName?: string;
+  name: string;
   email: string;
-  mobile: string;
-  whatsappMobile?: string;
   password: string;
+  role?: string;
+  storeId?: string;
 }
 
 export interface LoginPayload {
@@ -16,6 +14,9 @@ export interface LoginPayload {
 
 export interface AuthTokenResponse {
   accessToken: string;
-  refreshToken: string;
+  refreshToken?: string;
   tokenType: string;
+  userId: string;
+  role: string;
+  storeId?: string | null;
 }

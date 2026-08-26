@@ -79,12 +79,8 @@ export default function RegisterPage() {
 
     try {
       await register({
-        firstName: firstName.trim(),
-        lastName: lastName.trim() || undefined,
+        name: `${firstName.trim()} ${lastName.trim()}`.trim(),
         email: email.trim(),
-        mobile: mobile.trim(),
-        whatsappMobile:
-          whatsappMobile.trim() || undefined,
         password,
       });
 
