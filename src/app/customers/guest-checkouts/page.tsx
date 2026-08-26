@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Plus, Trash2, UserX } from "lucide-react";
@@ -9,7 +9,7 @@ import { guestCheckoutApi } from "@/lib/api/customer-extras";
 import { ApiError } from "@/lib/api-client";
 import { GuestCheckoutLog } from "@/types/customer-extras";
 
-export default function GuestCheckoutsPage() {
+function GuestCheckoutsPageContent() {
   const { token } = useAuth();
   const searchParams = useSearchParams();
   const tenantId = searchParams.get("tenantId") || "";
@@ -155,5 +155,18 @@ export default function GuestCheckoutsPage() {
         )}
       </div>
     </div>
+  );
+}
+export default function GuestCheckoutsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center text-gray-400">
+          Loading...
+        </div>
+      }
+    >
+      <GuestCheckoutsPageContent />
+    </Suspense>
   );
 }

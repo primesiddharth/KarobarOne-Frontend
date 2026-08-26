@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { Suspense, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import {
@@ -19,6 +19,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
+import { getUserIdFromToken } from "@/lib/jwt";
 import { customerApi, customerAddressApi } from "@/lib/api/customer";
 import {
   noteApi,
@@ -45,8 +46,9 @@ const TABS = [
 
 type TabId = (typeof TABS)[number]["id"];
 
-export default function CustomerDetailPage() {
-  const { token, user } = useAuth();
+function CustomerDetailPageContent() {
+  const { token } = useAuth();
+  const userId = getUserIdFromToken(token);
   const params = useParams();
   const searchParams = useSearchParams();
   const customerId = params.customerId as string;
@@ -100,7 +102,7 @@ export default function CustomerDetailPage() {
 
         {tab === "addresses" && <AddressesTab customerId={customerId} token={token} />}
         {tab === "notes" && (
-          <NotesTab customerId={customerId} token={token} userId={user?.userId || ""} />
+          <NotesTab customerId={customerId} token={token} userId={userId} />
         )}
         {tab === "activity" && (
           <ActivityTab customerId={customerId} token={token} />
@@ -598,5 +600,18 @@ function SessionsTab({ customerId, token }: { customerId: string; token: string 
         </div>
       ))}
     </div>
+  );
+}
+export default function CustomerDetailPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center text-gray-400">
+          Loading...
+        </div>
+      }
+    >
+      <CustomerDetailPageContent />
+    </Suspense>
   );
 }

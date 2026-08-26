@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Pencil } from "lucide-react";
@@ -11,7 +11,7 @@ import { Category, Brand } from "@/types/catalog";
 
 const STATUS_OPTIONS = ["DRAFT", "PUBLISHED", "ARCHIVED"];
 
-export default function EditProductPage() {
+function EditProductPageContent() {
   const { token } = useAuth();
   const router = useRouter();
   const params = useParams();
@@ -211,5 +211,18 @@ export default function EditProductPage() {
         </div>
       </div>
     </div>
+  );
+}
+export default function EditProductPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center text-gray-400">
+          Loading...
+        </div>
+      }
+    >
+      <EditProductPageContent />
+    </Suspense>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { Suspense, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Plus, Trash2, Pencil, Check, X, Truck } from "lucide-react";
@@ -9,7 +9,7 @@ import { shippingProfileApi } from "@/lib/api/catalog-extras";
 import { ApiError } from "@/lib/api-client";
 import { ShippingProfile } from "@/types/catalog-extras";
 
-export default function ShippingProfilesPage() {
+function ShippingProfilesPageContent() {
   const { token } = useAuth();
   const searchParams = useSearchParams();
   const tenantId = searchParams.get("tenantId") || "";
@@ -263,5 +263,18 @@ export default function ShippingProfilesPage() {
         )}
       </div>
     </div>
+  );
+}
+export default function ShippingProfilesPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center text-gray-400">
+          Loading...
+        </div>
+      }
+    >
+      <ShippingProfilesPageContent />
+    </Suspense>
   );
 }

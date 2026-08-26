@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { Suspense, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Plus, Trash2, Pencil, Check, X, FolderTree } from "lucide-react";
@@ -17,7 +17,7 @@ function slugify(value: string): string {
     .replace(/(^-|-$)/g, "");
 }
 
-export default function CategoriesPage() {
+function CategoriesPageContent() {
   const { token } = useAuth();
   const searchParams = useSearchParams();
   const tenantId = searchParams.get("tenantId") || "";
@@ -221,5 +221,18 @@ export default function CategoriesPage() {
         )}
       </div>
     </div>
+  );
+}
+export default function CategoriesPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center text-gray-400">
+          Loading...
+        </div>
+      }
+    >
+      <CategoriesPageContent />
+    </Suspense>
   );
 }

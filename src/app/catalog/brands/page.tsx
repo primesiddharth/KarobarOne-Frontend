@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { Suspense, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Plus, Trash2, Pencil, Check, X, Tag, ShieldCheck } from "lucide-react";
@@ -9,7 +9,7 @@ import { brandApi } from "@/lib/api/catalog";
 import { ApiError } from "@/lib/api-client";
 import { Brand } from "@/types/catalog";
 
-export default function BrandsPage() {
+function BrandsPageContent() {
   const { token } = useAuth();
   const searchParams = useSearchParams();
   const tenantId = searchParams.get("tenantId") || "";
@@ -224,5 +224,18 @@ export default function BrandsPage() {
         )}
       </div>
     </div>
+  );
+}
+export default function BrandsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center text-gray-400">
+          Loading...
+        </div>
+      }
+    >
+      <BrandsPageContent />
+    </Suspense>
   );
 }

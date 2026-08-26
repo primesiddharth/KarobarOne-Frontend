@@ -5,11 +5,13 @@ import Link from "next/link";
 import { ArrowLeft, Monitor, LogOut } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { userSessionApi } from "@/lib/api/system-extras";
+import { getUserIdFromToken } from "@/lib/jwt";
 import { ApiError } from "@/lib/api-client";
 import { UserSession } from "@/types/system-extras";
 
 export default function ActiveSessionsPage() {
-  const { token, user } = useAuth();
+  const { token } = useAuth();
+  const userId = getUserIdFromToken(token);
 
   const [sessions, setSessions] = useState<UserSession[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -17,27 +19,27 @@ export default function ActiveSessionsPage() {
   const [endingId, setEndingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!token || !user?.userId) return;
+    if (!token || !userId) return;
     setIsLoading(true);
     try {
-      const result = await userSessionApi.list(user.userId, token);
+      const result = await userSessionApi.list(userId, token);
       setSessions(result);
     } catch (err) {
       if (err instanceof ApiError) setError(err.message);
     } finally {
       setIsLoading(false);
     }
-  }, [token, user?.userId]);
+  }, [token, userId]);
 
   useEffect(() => {
     load();
   }, [load]);
 
   async function handleEnd(sessionId: string) {
-    if (!token || !user?.userId) return;
+    if (!token || !userId) return;
     setEndingId(sessionId);
     try {
-      await userSessionApi.end(user.userId, sessionId, token);
+      await userSessionApi.end(userId, sessionId, token);
       setSessions((prev) => prev.filter((s) => s.id !== sessionId));
     } catch (err) {
       if (err instanceof ApiError) alert(err.message);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { Suspense, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Plus, Users, Pencil, Trash2, MapPin, Trash } from "lucide-react";
@@ -15,7 +15,7 @@ const STATUS_STYLES: Record<string, string> = {
   BLOCKED: "bg-red-100 text-red-700",
 };
 
-export default function CustomerListPage() {
+function CustomerListPageContent() {
   const { token } = useAuth();
   const searchParams = useSearchParams();
   const tenantId = searchParams.get("tenantId") || "";
@@ -182,5 +182,18 @@ export default function CustomerListPage() {
         )}
       </div>
     </div>
+  );
+}
+export default function CustomerListPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center text-gray-400">
+          Loading...
+        </div>
+      }
+    >
+      <CustomerListPageContent />
+    </Suspense>
   );
 }

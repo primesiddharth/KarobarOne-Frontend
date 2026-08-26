@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Trash2, RotateCcw } from "lucide-react";
@@ -9,7 +9,7 @@ import { customerApi } from "@/lib/api/customer";
 import { ApiError } from "@/lib/api-client";
 import { Customer } from "@/types/customer";
 
-export default function TrashedCustomersPage() {
+function TrashedCustomersPageContent() {
   const { token } = useAuth();
   const searchParams = useSearchParams();
   const tenantId = searchParams.get("tenantId") || "";
@@ -95,5 +95,18 @@ export default function TrashedCustomersPage() {
         )}
       </div>
     </div>
+  );
+}
+export default function TrashedCustomersPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center text-gray-400">
+          Loading...
+        </div>
+      }
+    >
+      <TrashedCustomersPageContent />
+    </Suspense>
   );
 }

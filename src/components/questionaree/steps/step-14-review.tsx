@@ -93,7 +93,7 @@ export function Step14Review() {
       const tenant = await tenantApi.create(tenantPayload, token)
 
       // Step 2: create the Store, now that we have a tenantId
-      await storeApi.create(
+      const store = await storeApi.create(
         {
           tenantId: tenant.id,
           storeName: data.businessName,
@@ -106,6 +106,8 @@ export function Step14Review() {
         },
         token
       )
+      localStorage.setItem("karobar_tenant_id", tenant.id)
+      localStorage.setItem("karobar_store_id", store.id)
 
       // Move to the Step15Success screen
       nextStep()

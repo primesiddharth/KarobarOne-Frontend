@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { Suspense, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft, History, RotateCcw } from "lucide-react";
@@ -10,7 +10,7 @@ import { ApiError } from "@/lib/api-client";
 import { EntityVersion } from "@/types/system-extras";
 
 // Usage: /system/versions?entityType=PRODUCT&entityId=<id>&tenantId=<id>&storeId=<id>
-export default function EntityVersionsPage() {
+function EntityVersionsPageContent() {
   const { token } = useAuth();
   const searchParams = useSearchParams();
   const entityType = searchParams.get("entityType") || "";
@@ -111,5 +111,18 @@ export default function EntityVersionsPage() {
         )}
       </div>
     </div>
+  );
+}
+export default function EntityVersionsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center text-gray-400">
+          Loading...
+        </div>
+      }
+    >
+      <EntityVersionsPageContent />
+    </Suspense>
   );
 }

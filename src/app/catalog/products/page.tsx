@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { Suspense, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Plus, Search, Pencil, Trash2, Package, Layers } from "lucide-react";
@@ -15,7 +15,7 @@ const STATUS_STYLES: Record<string, string> = {
   ARCHIVED: "bg-red-100 text-red-700",
 };
 
-export default function ProductListPage() {
+function ProductListPageContent() {
   const { token } = useAuth();
   const searchParams = useSearchParams();
   const tenantId = searchParams.get("tenantId") || "";
@@ -199,5 +199,18 @@ export default function ProductListPage() {
         )}
       </div>
     </div>
+  );
+}
+export default function ProductListPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center text-gray-400">
+          Loading...
+        </div>
+      }
+    >
+      <ProductListPageContent />
+    </Suspense>
   );
 }

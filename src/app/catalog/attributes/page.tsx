@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { Suspense, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Plus, Trash2, Pencil, Check, X, Tags } from "lucide-react";
@@ -19,7 +19,7 @@ function codify(value: string): string {
     .replace(/(^_|_$)/g, "");
 }
 
-export default function AttributesPage() {
+function AttributesPageContent() {
   const { token } = useAuth();
   const searchParams = useSearchParams();
   const tenantId = searchParams.get("tenantId") || "";
@@ -251,5 +251,18 @@ export default function AttributesPage() {
         )}
       </div>
     </div>
+  );
+}
+export default function AttributesPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center text-gray-400">
+          Loading...
+        </div>
+      }
+    >
+      <AttributesPageContent />
+    </Suspense>
   );
 }

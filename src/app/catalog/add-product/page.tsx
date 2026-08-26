@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Package } from "lucide-react";
@@ -17,7 +17,7 @@ function slugify(value: string): string {
     .replace(/(^-|-$)/g, "");
 }
 
-export default function AddProductPage() {
+function AddProductPageContent() {
   const { token } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -213,5 +213,18 @@ export default function AddProductPage() {
         </div>
       </div>
     </div>
+  );
+}
+export default function AddProductPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center text-gray-400">
+          Loading...
+        </div>
+      }
+    >
+      <AddProductPageContent />
+    </Suspense>
   );
 }

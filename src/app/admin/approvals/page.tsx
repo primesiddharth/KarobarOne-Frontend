@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { Suspense, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft, CheckCircle2, XCircle, Undo2, ClipboardList, UserPlus, Plus } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
+import { getUserIdFromToken } from "@/lib/jwt";
 import { approvalRequestApi, reviewQueueApi } from "@/lib/api/customer-extras";
 import { ApiError } from "@/lib/api-client";
 import { ApprovalRequest, ReviewQueueItem } from "@/types/customer-extras";
@@ -16,8 +17,9 @@ const STATUS_STYLES: Record<string, string> = {
   REJECTED: "bg-red-100 text-red-700",
 };
 
-export default function AdminApprovalsPage() {
-  const { token, user } = useAuth();
+function AdminApprovalsContent() {
+  const { token } = useAuth();
+  const userId = getUserIdFromToken(token);
   const searchParams = useSearchParams();
   const tenantId = searchParams.get("tenantId") || "";
   const storeId = searchParams.get("storeId") || "";
@@ -115,7 +117,7 @@ export default function AdminApprovalsPage() {
           entityType: draftEntityType,
           entityId: draftEntityId.trim(),
           versionData: parsedData,
-          createdBy: user?.userId || "",
+          createdBy: userId,
         },
         token
       );
@@ -340,5 +342,18 @@ export default function AdminApprovalsPage() {
         )}
       </div>
     </div>
+  );
+}
+export default function AdminApprovalsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center text-gray-400">
+          Loading...
+        </div>
+      }
+    >
+      <AdminApprovalsContent />
+    </Suspense>
   );
 }

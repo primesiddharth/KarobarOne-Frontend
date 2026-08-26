@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { Suspense, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import {
@@ -40,7 +40,7 @@ const TABS = [
 
 type TabId = (typeof TABS)[number]["id"];
 
-export default function ProductDetailPage() {
+function ProductDetailPageContent() {
   const { token } = useAuth();
   const params = useParams();
   const searchParams = useSearchParams();
@@ -576,5 +576,18 @@ function AttributesTab({
         </div>
       )}
     </div>
+  );
+}
+export default function ProductDetailPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center text-gray-400">
+          Loading...
+        </div>
+      }
+    >
+      <ProductDetailPageContent />
+    </Suspense>
   );
 }
