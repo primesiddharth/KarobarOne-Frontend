@@ -18,10 +18,11 @@ import { ApiError } from "@/lib/api-client";
 type LoginMode = "password" | "otp";
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, verifyLogin } = useAuth();
   const router = useRouter();
 
   const [mode, setMode] = useState<LoginMode>("password");
+  const [step, setStep] = useState<"credentials" | "verify">("credentials");
 
   // Password login state
   const [email, setEmail] = useState("");
@@ -30,44 +31,57 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // OTP login state (UI-only for now — backend endpoints not ready yet)
-  const [mobile, setMobile] = useState("");
-  const [otp, setOtp] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
+  const [otpId, setOtpId] = useState("");
+  const [otpCode, setOtpCode] = useState("");
 
-  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+  // Mobile-OTP login state (UI-only for now — separate backend flow not ready yet)
+  const [mobile, setMobile] = useState("");
+  const [mobileOtp, setMobileOtp] = useState("");
+  const [mobileOtpSent, setMobileOtpSent] = useState(false);
+
+  async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
     setIsSubmitting(true);
     try {
-      await login({
-        email: email.trim(),
-        password,
-      });
-      router.push("/dashboard");
+      const result = await login({ email: email.trim(), password });
+      setOtpId(result.otpId);
+      setStep("verify");
     } catch (err) {
-      if (err instanceof ApiError) {
-        setError(err.message);
-      } else if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("Unable to login. Please try again.");
-      }
+      if (err instanceof ApiError) setError(err.message);
+      else if (err instanceof Error) setError(err.message);
+      else setError("Unable to login. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }
 
-  function handleSendOtp(e: React.FormEvent) {
+  async function handleVerifyOtp(e: React.FormEvent) {
     e.preventDefault();
-    // TODO: wire to backend once a mobile-based OTP-login endpoint exists
-    setOtpSent(true);
+    setError(null);
+    setIsSubmitting(true);
+    try {
+      await verifyLogin(otpId, otpCode.trim());
+      router.push("/dashboard");
+    } catch (err) {
+      if (err instanceof ApiError) setError(err.message);
+      else setError("Invalid or expired code. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  function handleSendMobileOtp(e: React.FormEvent) {
+    e.preventDefault();
+    // TODO: wire once a mobile-based OTP-login endpoint exists
+    setMobileOtpSent(true);
   }
 
   function switchMode(next: LoginMode) {
     setMode(next);
     setError(null);
-    setOtpSent(false);
+    setStep("credentials");
+    setMobileOtpSent(false);
   }
 
   return (
@@ -95,32 +109,30 @@ export default function LoginPage() {
           </div>
 
           {/* Mode toggle */}
-          <div className="flex bg-gray-100 rounded-lg p-1 mb-6">
-            <button
-              type="button"
-              onClick={() => switchMode("password")}
-              className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
-                mode === "password"
-                  ? "bg-white text-[#5b4ef9] shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              Password
-            </button>
-            <button
-              type="button"
-              onClick={() => switchMode("otp")}
-              className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
-                mode === "otp"
-                  ? "bg-white text-[#5b4ef9] shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              Login with OTP
-            </button>
-          </div>
+          {step === "credentials" && (
+            <div className="flex bg-gray-100 rounded-lg p-1 mb-6">
+              <button
+                type="button"
+                onClick={() => switchMode("password")}
+                className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
+                  mode === "password" ? "bg-white text-[#5b4ef9] shadow-sm" : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                Password
+              </button>
+              <button
+                type="button"
+                onClick={() => switchMode("otp")}
+                className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
+                  mode === "otp" ? "bg-white text-[#5b4ef9] shadow-sm" : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                Login with OTP
+              </button>
+            </div>
+          )}
 
-          {mode === "password" ? (
+          {mode === "password" && step === "credentials" && (
             <form onSubmit={handleLogin}>
               <div className="mb-5">
                 <label className="block text-gray-700 mb-2">Email Address</label>
@@ -183,8 +195,54 @@ export default function LoginPage() {
                 {isSubmitting ? "Logging in..." : "Login"}
               </button>
             </form>
-          ) : (
-            <form onSubmit={handleSendOtp}>
+          )}
+
+          {mode === "password" && step === "verify" && (
+            <form onSubmit={handleVerifyOtp}>
+              <div className="text-center mb-6">
+                <div className="w-14 h-14 bg-[#5b4ef9]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Mail className="w-6 h-6 text-[#5b4ef9]" />
+                </div>
+                <p className="text-gray-600 text-sm">
+                  We sent a 6-digit code to <span className="font-medium">{email}</span>
+                </p>
+              </div>
+
+              <input
+                value={otpCode}
+                onChange={(e) => setOtpCode(e.target.value)}
+                placeholder="Enter 6-digit code"
+                maxLength={6}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-center text-lg tracking-widest focus:outline-none focus:ring-2 focus:ring-[#5b4ef9] mb-4"
+              />
+
+              {error && (
+                <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-4">
+                  {error}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={isSubmitting || otpCode.length !== 6}
+                className="w-full bg-[#5b4ef9] text-white py-3 rounded-lg hover:bg-[#4a3ee0] transition-colors disabled:opacity-50"
+              >
+                {isSubmitting ? "Verifying..." : "Verify & Login"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setStep("credentials")}
+                className="w-full text-sm text-gray-500 hover:text-gray-700 transition-colors mt-3"
+              >
+                ← Back
+              </button>
+            </form>
+          )}
+
+          {mode === "otp" && (
+            <form onSubmit={handleSendMobileOtp}>
               <div className="mb-5">
                 <label className="block text-gray-700 mb-2">Mobile Number</label>
                 <div className="relative">
@@ -196,14 +254,14 @@ export default function LoginPage() {
                     placeholder="9876543210"
                     value={mobile}
                     onChange={(e) => setMobile(e.target.value)}
-                    disabled={otpSent}
+                    disabled={mobileOtpSent}
                     className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5b4ef9] focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400"
                     required
                   />
                 </div>
               </div>
 
-              {otpSent && (
+              {mobileOtpSent && (
                 <div className="mb-5">
                   <label className="block text-gray-700 mb-2">Enter OTP</label>
                   <div className="relative">
@@ -213,8 +271,8 @@ export default function LoginPage() {
                     <input
                       type="text"
                       placeholder="6-digit code"
-                      value={otp}
-                      onChange={(e) => setOtp(e.target.value)}
+                      value={mobileOtp}
+                      onChange={(e) => setMobileOtp(e.target.value)}
                       maxLength={6}
                       className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5b4ef9] focus:border-transparent"
                     />
@@ -224,7 +282,7 @@ export default function LoginPage() {
 
               <div className="flex items-start gap-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-6">
                 <Clock className="w-4 h-4 mt-0.5 shrink-0" />
-                <span>OTP login is coming soon — this feature is being finalized on the backend.</span>
+                <span>Mobile OTP login is coming soon — this feature is being finalized on the backend.</span>
               </div>
 
               <button
@@ -232,7 +290,7 @@ export default function LoginPage() {
                 disabled
                 className="w-full bg-[#5b4ef9] text-white py-3 rounded-lg opacity-50 cursor-not-allowed"
               >
-                {otpSent ? "Verify OTP" : "Send OTP"}
+                {mobileOtpSent ? "Verify OTP" : "Send OTP"}
               </button>
             </form>
           )}
