@@ -9,7 +9,6 @@ import {
   ArrowLeft,
   Eye,
   EyeOff,
-  Phone,
   Clock,
 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
@@ -34,10 +33,10 @@ export default function LoginPage() {
   const [otpId, setOtpId] = useState("");
   const [otpCode, setOtpCode] = useState("");
 
-  // Mobile-OTP login state (UI-only for now — separate backend flow not ready yet)
-  const [mobile, setMobile] = useState("");
-  const [mobileOtp, setMobileOtp] = useState("");
-  const [mobileOtpSent, setMobileOtpSent] = useState(false);
+  // Passwordless email-OTP login state (UI-only for now — backend endpoint not ready yet)
+  const [otpEmail, setOtpEmail] = useState("");
+  const [emailOtpCode, setEmailOtpCode] = useState("");
+  const [emailOtpSent, setEmailOtpSent] = useState(false);
 
   async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -71,17 +70,17 @@ export default function LoginPage() {
     }
   }
 
-  function handleSendMobileOtp(e: React.FormEvent) {
+  function handleSendEmailOtp(e: React.FormEvent) {
     e.preventDefault();
-    // TODO: wire once a mobile-based OTP-login endpoint exists
-    setMobileOtpSent(true);
+    // TODO: wire once a passwordless email-OTP-login endpoint exists
+    setEmailOtpSent(true);
   }
 
   function switchMode(next: LoginMode) {
     setMode(next);
     setError(null);
     setStep("credentials");
-    setMobileOtpSent(false);
+    setEmailOtpSent(false);
   }
 
   return (
@@ -241,29 +240,26 @@ export default function LoginPage() {
           )}
 
           {mode === "otp" && (
-            <form onSubmit={handleSendMobileOtp}>
+            <form onSubmit={handleSendEmailOtp}>
               <div className="mb-5">
-                <label className="block text-gray-700 mb-2">Mobile Number</label>
+                <label className="block text-gray-700 mb-2">Email Address</label>
                 <div className="relative">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
-                    <Phone className="w-5 h-5 text-gray-400" />
-                    <span className="text-gray-500 text-sm">+91</span>
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2">
+                    <Mail className="w-5 h-5 text-gray-400" />
                   </div>
                   <input
-                    type="tel"
-                    placeholder="9876543210"
-                    value={mobile}
-                    onChange={(e) => setMobile(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                    inputMode="numeric"
-                    maxLength={10}
-                    disabled={mobileOtpSent}
-                    className="w-full pl-20 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5b4ef9] focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400"
+                    type="email"
+                    placeholder="Enter your email"
+                    value={otpEmail}
+                    onChange={(e) => setOtpEmail(e.target.value)}
+                    disabled={emailOtpSent}
+                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5b4ef9] focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400"
                     required
                   />
                 </div>
               </div>
 
-              {mobileOtpSent && (
+              {emailOtpSent && (
                 <div className="mb-5">
                   <label className="block text-gray-700 mb-2">Enter OTP</label>
                   <div className="relative">
@@ -273,8 +269,8 @@ export default function LoginPage() {
                     <input
                       type="text"
                       placeholder="6-digit code"
-                      value={mobileOtp}
-                      onChange={(e) => setMobileOtp(e.target.value)}
+                      value={emailOtpCode}
+                      onChange={(e) => setEmailOtpCode(e.target.value)}
                       maxLength={6}
                       className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5b4ef9] focus:border-transparent"
                     />
@@ -284,7 +280,7 @@ export default function LoginPage() {
 
               <div className="flex items-start gap-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-6">
                 <Clock className="w-4 h-4 mt-0.5 shrink-0" />
-                <span>Mobile OTP login is coming soon — this feature is being finalized on the backend.</span>
+                <span>Passwordless email OTP login is coming soon — this feature is being finalized on the backend.</span>
               </div>
 
               <button
@@ -292,7 +288,7 @@ export default function LoginPage() {
                 disabled
                 className="w-full bg-[#5b4ef9] text-white py-3 rounded-lg opacity-50 cursor-not-allowed"
               >
-                {mobileOtpSent ? "Verify OTP" : "Send OTP"}
+                {emailOtpSent ? "Verify OTP" : "Send OTP"}
               </button>
             </form>
           )}

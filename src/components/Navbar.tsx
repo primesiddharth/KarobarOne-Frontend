@@ -3,9 +3,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Image from "next/image";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Settings, LogOut } from "lucide-react";
 import { LanguageSelector } from "./LanguageSelector";
 import { useAuth } from "@/context/auth-context";
+import { ProfileMenu } from "./ProfileMenu";
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -55,12 +56,7 @@ export function Navbar() {
               Book a Demo
             </Link>
             {token ? (
-              <button
-                onClick={handleLogout}
-                className="bg-[#5b4ef9] text-white px-6 py-2 rounded-lg hover:bg-[#4a3ee0] transition-colors"
-              >
-                Logout
-              </button>
+              <ProfileMenu />
             ) : (
               <Link
                 href="/login"
@@ -112,12 +108,22 @@ export function Navbar() {
               Book a Demo
             </Link>
             {token ? (
-              <button
-                onClick={handleLogout}
-                className="bg-[#5b4ef9] text-white px-6 py-2 rounded-lg hover:bg-[#4a3ee0] transition-colors text-center"
-              >
-                Logout
-              </button>
+              <>
+                <button
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center justify-center gap-2 border border-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <Settings className="w-4 h-4" />
+                  Settings
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center justify-center gap-2 text-red-600 border border-red-200 px-6 py-2 rounded-lg hover:bg-red-50 transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Logout
+                </button>
+              </>
             ) : (
               <Link
                 href="/login"
