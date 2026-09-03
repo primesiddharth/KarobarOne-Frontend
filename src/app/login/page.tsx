@@ -85,32 +85,31 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#5b4ef9] to-[#4a3ee0] flex items-center justify-center p-6">
-      <div className="w-full max-w-md">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-white mb-8 hover:text-white/80 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Home
-        </Link>
-
-        <div className="bg-white rounded-2xl p-8 shadow-2xl">
-          <div className="flex items-center justify-center gap-3 mb-8">
+    <div className="min-h-screen bg-gradient-to-br from-[#5b4ef9] to-[#4a3ee0] flex items-center justify-center p-6 relative overflow-y-auto">
+      <Link
+        href="/"
+        className="absolute top-6 left-6 inline-flex items-center gap-2 text-white hover:text-white/80 transition-colors"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back to Home
+      </Link>
+      <div className="w-full max-w-md py-4">
+        <div className="bg-white rounded-2xl p-6 shadow-2xl">
+          <div className="flex items-center justify-center gap-3 mb-5">
             <div className="bg-[#5b4ef9] p-2 rounded-lg">
               <Zap className="w-6 h-6 text-white" />
             </div>
             <span className="text-2xl font-semibold text-gray-900">KarobarOne</span>
           </div>
 
-          <div className="text-center mb-6">
+          <div className="text-center mb-4">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
             <p className="text-gray-600">Login to access your dashboard</p>
           </div>
 
           {/* Mode toggle */}
           {step === "credentials" && (
-            <div className="flex bg-gray-100 rounded-lg p-1 mb-6">
+            <div className="flex bg-gray-100 rounded-lg p-1 mb-4">
               <button
                 type="button"
                 onClick={() => switchMode("password")}
@@ -175,7 +174,7 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <div className="flex justify-end mb-6">
+              <div className="flex justify-end mb-4">
                 <Link href="/forgot-password" className="text-sm text-[#5b4ef9] hover:underline">
                   Forgot Password?
                 </Link>
@@ -199,7 +198,7 @@ export default function LoginPage() {
 
           {mode === "password" && step === "verify" && (
             <form onSubmit={handleVerifyOtp}>
-              <div className="text-center mb-6">
+              <div className="text-center mb-4">
                 <div className="w-14 h-14 bg-[#5b4ef9]/10 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Mail className="w-6 h-6 text-[#5b4ef9]" />
                 </div>
@@ -246,16 +245,19 @@ export default function LoginPage() {
               <div className="mb-5">
                 <label className="block text-gray-700 mb-2">Mobile Number</label>
                 <div className="relative">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
                     <Phone className="w-5 h-5 text-gray-400" />
+                    <span className="text-gray-500 text-sm">+91</span>
                   </div>
                   <input
                     type="tel"
                     placeholder="9876543210"
                     value={mobile}
-                    onChange={(e) => setMobile(e.target.value)}
+                    onChange={(e) => setMobile(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                    inputMode="numeric"
+                    maxLength={10}
                     disabled={mobileOtpSent}
-                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5b4ef9] focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400"
+                    className="w-full pl-20 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5b4ef9] focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400"
                     required
                   />
                 </div>
@@ -295,7 +297,7 @@ export default function LoginPage() {
             </form>
           )}
 
-          <div className="mt-8 text-center">
+          <div className="mt-5 text-center">
             <p className="text-gray-600 text-sm">
               Don&apos;t have an account?{" "}
               <Link href="/register" className="text-[#5b4ef9] hover:underline font-semibold">
@@ -305,7 +307,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <p className="text-white text-center text-sm mt-6">
+        <p className="text-white text-center text-sm mt-4">
           By continuing, you agree to our Terms of Service and Privacy Policy
         </p>
       </div>

@@ -41,8 +41,8 @@ export default function RegisterPage() {
         firstName: firstName.trim(),
         lastName: lastName.trim() || undefined,
         email: email.trim(),
-        mobile: mobile.trim(),
-        whatsappMobile: whatsappMobile.trim() || undefined,
+        mobile: `+91${mobile.trim()}`,
+        whatsappMobile: whatsappMobile.trim() ? `+91${whatsappMobile.trim()}` : undefined,
         password,
       });
       setOtpId(result.otpId);
@@ -71,18 +71,17 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#5b4ef9] to-[#4a3ee0] flex items-center justify-center p-6">
-      <div className="w-full max-w-md">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-white mb-8 hover:text-white/80 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Home
-        </Link>
-
-        <div className="bg-white rounded-2xl p-8 shadow-2xl">
-          <div className="flex items-center justify-center gap-3 mb-8">
+    <div className="min-h-screen bg-gradient-to-br from-[#5b4ef9] to-[#4a3ee0] flex items-center justify-center p-6 relative overflow-y-auto">
+      <Link
+        href="/"
+        className="absolute top-6 left-6 inline-flex items-center gap-2 text-white hover:text-white/80 transition-colors"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back to Home
+      </Link>
+      <div className="w-full max-w-md py-4">
+        <div className="bg-white rounded-2xl p-6 shadow-2xl">
+          <div className="flex items-center justify-center gap-3 mb-5">
             <div className="bg-[#5b4ef9] p-2 rounded-lg">
               <Zap className="w-6 h-6 text-white" />
             </div>
@@ -91,12 +90,12 @@ export default function RegisterPage() {
 
           {step === "form" ? (
             <>
-              <div className="text-center mb-6">
+              <div className="text-center mb-4">
                 <h1 className="text-2xl font-bold text-gray-900 mb-2">Create Account</h1>
                 <p className="text-gray-600 text-sm">Sign up to get started</p>
               </div>
 
-              <form onSubmit={handleSubmitForm} className="space-y-4">
+              <form onSubmit={handleSubmitForm} className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <input
                     value={firstName}
@@ -123,19 +122,33 @@ export default function RegisterPage() {
                 />
 
                 <div className="grid grid-cols-2 gap-3">
-                  <input
-                    value={mobile}
-                    onChange={(e) => setMobile(e.target.value)}
-                    placeholder="Mobile Number"
-                    required
-                    className="px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5b4ef9]"
-                  />
-                  <input
-                    value={whatsappMobile}
-                    onChange={(e) => setWhatsappMobile(e.target.value)}
-                    placeholder="WhatsApp (optional)"
-                    className="px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5b4ef9]"
-                  />
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm pointer-events-none">
+                      +91
+                    </span>
+                    <input
+                      value={mobile}
+                      onChange={(e) => setMobile(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                      placeholder="Mobile Number"
+                      inputMode="numeric"
+                      maxLength={10}
+                      required
+                      className="w-full pl-11 pr-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5b4ef9]"
+                    />
+                  </div>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm pointer-events-none">
+                      +91
+                    </span>
+                    <input
+                      value={whatsappMobile}
+                      onChange={(e) => setWhatsappMobile(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                      placeholder="WhatsApp (optional)"
+                      inputMode="numeric"
+                      maxLength={10}
+                      className="w-full pl-11 pr-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5b4ef9]"
+                    />
+                  </div>
                 </div>
 
                 <input
@@ -173,7 +186,7 @@ export default function RegisterPage() {
             </>
           ) : (
             <>
-              <div className="text-center mb-6">
+              <div className="text-center mb-4">
                 <div className="w-14 h-14 bg-[#5b4ef9]/10 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Mail className="w-6 h-6 text-[#5b4ef9]" />
                 </div>
@@ -183,7 +196,7 @@ export default function RegisterPage() {
                 </p>
               </div>
 
-              <form onSubmit={handleVerifyOtp} className="space-y-4">
+              <form onSubmit={handleVerifyOtp} className="space-y-3">
                 <input
                   value={otpCode}
                   onChange={(e) => setOtpCode(e.target.value)}
@@ -218,7 +231,7 @@ export default function RegisterPage() {
             </>
           )}
 
-          <div className="mt-8 text-center">
+          <div className="mt-5 text-center">
             <p className="text-gray-600 text-sm">
               Already have an account?{" "}
               <Link href="/login" className="text-[#5b4ef9] hover:underline font-semibold">

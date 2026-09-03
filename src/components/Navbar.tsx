@@ -1,12 +1,23 @@
 "use client"
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Image from "next/image";
 import { Menu, X } from "lucide-react";
 import { LanguageSelector } from "./LanguageSelector";
+import { useAuth } from "@/context/auth-context";
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { token, logout } = useAuth();
+  const router = useRouter();
+
+  function handleLogout() {
+    logout();
+    setIsMenuOpen(false);
+    router.push("/");
+  }
+
   return (
     <nav className="sticky top-0 z-50 bg-white border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-6 py-4">
@@ -43,12 +54,21 @@ export function Navbar() {
             >
               Book a Demo
             </Link>
-            <Link
-              href="/login"
-              className="bg-[#5b4ef9] text-white px-6 py-2 rounded-lg hover:bg-[#4a3ee0] transition-colors"
-            >
-              Login
-            </Link>
+            {token ? (
+              <button
+                onClick={handleLogout}
+                className="bg-[#5b4ef9] text-white px-6 py-2 rounded-lg hover:bg-[#4a3ee0] transition-colors"
+              >
+                Logout
+              </button>
+            ) : (
+              <Link
+                href="/login"
+                className="bg-[#5b4ef9] text-white px-6 py-2 rounded-lg hover:bg-[#4a3ee0] transition-colors"
+              >
+                Login
+              </Link>
+            )}
           </div>
 
           {/* Mobile Hamburger */}
@@ -91,13 +111,22 @@ export function Navbar() {
             >
               Book a Demo
             </Link>
-            <Link
-              href="/login"
-              className="bg-[#5b4ef9] text-white px-6 py-2 rounded-lg hover:bg-[#4a3ee0] transition-colors text-center"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Login
-            </Link>
+            {token ? (
+              <button
+                onClick={handleLogout}
+                className="bg-[#5b4ef9] text-white px-6 py-2 rounded-lg hover:bg-[#4a3ee0] transition-colors text-center"
+              >
+                Logout
+              </button>
+            ) : (
+              <Link
+                href="/login"
+                className="bg-[#5b4ef9] text-white px-6 py-2 rounded-lg hover:bg-[#4a3ee0] transition-colors text-center"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Login
+              </Link>
+            )}
           </div>
         </div>
       </div>
